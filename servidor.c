@@ -69,11 +69,6 @@ int main()
       printf("ERROR on accept\n");
       return -1;
     }
-	//readMessage(newsockfd, &msg);
-
-	//printf("%s\n",msg.username);
-
-//    read(newsockfd, &thread, sizeof(thread));
 
     if (thread)
     {
@@ -85,14 +80,6 @@ int main()
       }
     
     }
- /*   else
-    {
-      if(pthread_create(&syncThread, NULL, sync_thread_sv, &newsockfd))
-      {
-        printf("ERROR creating sync thread\n");
-        return -1;
-      }
-    }*/
   }
 }
 
@@ -125,7 +112,6 @@ void* client_thread (void *socket)
 	byteCount = sendMessage(*client_socket, &enviar);
 
     
-	//byteCount = write(*client_socket, &connected, sizeof(int));
 	if (byteCount < 0)
 		printf("ERROR sending connected message\n");
     
@@ -142,19 +128,16 @@ void* client_thread (void *socket)
 		
 		byteCount =sendMessage(*client_socket, &enviar);
 		
-		//byteCount = write(*client_socket, &connected, sizeof(int));
-		
 		if (byteCount < 0)
-		
 			printf("ERROR sending connected message\n");
-			// colocar para fazer algo aqui
+
 		printf("%s connected!\n", userid);
 	}
 	else
 	{
 		// avisa cliente que não conseguimos conectar
 		connected = 0;
-		//byteCount = write(*client_socket, &connected, sizeof(int));
+		
 		serverMessage(&enviar, ERRO, "");
 		
 		byteCount = sendMessage(*client_socket, &enviar); 
@@ -220,7 +203,7 @@ void listen_client(int client_socket, char *userid)
       {
           case SEND:printf("%s teste \n", mensagem->username);  break;
         //case FLLOW: 
-  	//case QUIT: close_client_connection(client_socket, userid); break;
+  	//case QUIT: 
   	//default: printf("ERROR invalid command\n");
       }
   } while(mensagem->type != QUIT);
