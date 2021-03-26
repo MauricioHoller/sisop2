@@ -46,9 +46,10 @@ int main(int argc, char const *argv[])
     // as threads que recebem mensagem devem ser mostradas na tela a meg recebida as de enviar apaenas enviam e testam se o servidor ainda esta aberto  
     int seqn=0;	
     //teste
-	PACOTE msg;
+	
+    /*PACOTE msg;
 
-    clientMessage(&msg, SEND, username, "aiapos");
+    //clientMessage(&msg, SEND, username, "aiapos");
 
     // === ESTAVA FAZENDO NA MAO GRANDE ===
 	//strncpy(msg.username, username, strlen(username) + 1);
@@ -64,9 +65,8 @@ int main(int argc, char const *argv[])
 	msg.seqn= msg.seqn+1;
 	sendMessage(sock, &msg);
 	sleep(10);
-    
-    } 
-		
+
+    } */		
 	//pthread_create(&sender, NULL, produtor, &sock);	
     
     //  while(1){
@@ -86,15 +86,24 @@ void *produtor(int sock) {
     int sockfd =  sock;
     
     PACOTE msg;
-    do {
-        
-        //char msg_str[255];
-        //scanf("%s", msg_str);
-        
-        //msg.dados = strdup(msg_str);
-        msg.seqn= msg.seqn+1;
+    msg.type = SEND;
 
-        puts(msg.dados);
+    strncpy(msg.username, username, strlen(username) + 1);
+    do {
+
+        
+        char msg_str[MSG_MAX_SIZE];
+        fgets(msg_str, MSG_MAX_SIZE, stdin);
+
+        /* Remove trailing newline, if there. */
+        if ((strlen(msg_str) > 0) && (msg_str[strlen (msg_str) - 1] == '\n'))
+            msg_str[strlen (msg_str) - 1] = '\0';
+
+        strncpy(msg.txt, msg_str, strlen(msg_str) + 1);
+
+        msg.seqn= msg.seqn+1;
+        
+        //puts(msg.txt);
         sendMessage(sockfd, &msg);
 	
 	} while (msg.type != QUIT);
