@@ -3,7 +3,7 @@
 #include <arpa/inet.h> 
 #include <unistd.h> 
 #include <string.h> 
-#include "mesnagem.c"
+#include "mensagem.c"
 #include <time.h>
 
 #define PORT 2000

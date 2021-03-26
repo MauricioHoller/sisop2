@@ -22,14 +22,20 @@
 #define MAXNAME 20
 #define MINNAME 3
 
-
-
+/* User client struct */
+typedef struct client {
+    int socket;                         // user current socket
+    pthread_t thread;                   // session thread
+    pthread_mutex_t mutex;              // session socket mutex
+    char username[MAXNAME];   // user name
+    int devices[2];	//quantidade de devices logados	
+} Cliente;
 
 
 int connect_server (char *host, int port);
 void login(int socket);
 void* consumidor(void *args);
-void* produtor(void *args);
+void* produtor(int socket);
 
 
 

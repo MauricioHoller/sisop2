@@ -13,10 +13,10 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #include "servidor.h"
 #include "mensagem.h"
-#include "mensagem.c"
-#include "estruturaListas.c"
+#include "estruturaListas.h"
 
 #define PORT 2000
 
@@ -24,7 +24,8 @@ struct client_list *client_list; // lista de clientes
 
 int main()
 {
-   int serverSockfd, newsockfd, thread;
+   
+  int serverSockfd, newsockfd, thread;
 
   socklen_t cliLen;
   struct sockaddr_in serv_addr, cli_addr;
@@ -80,6 +81,9 @@ int main()
       }
     
     }
+
+
+    sleep(100);
   }
 }
 
@@ -87,11 +91,11 @@ int main()
 
 void* client_thread (void *socket)
 {   
-  	int byteCount, connected;
-  	int *client_socket = (int*)socket;
+  int byteCount, connected;
+  int *client_socket = (int*)socket;
 	char userid[MAXNAME];
-  	char *hello = "ola";
-  	struct client client;
+  char *hello = "ola";
+  struct client client;
 	PACOTE msg, enviar; // colocar na lista de clientes
   	
 	//lê os dados de um cliente
@@ -199,9 +203,11 @@ void listen_client(int client_socket, char *userid)
       if (byteCount < 0)
         printf("ERROR listening to the client\n");
 
+
+      
       switch (mensagem->type)
       {
-          case SEND:printf("%s teste \n", mensagem->username);  break;
+          case SEND: puts(mensagem->dados); printf("%s says: o\n", mensagem->username); break;
         //case FLLOW: 
   	//case QUIT: 
   	//default: printf("ERROR invalid command\n");
