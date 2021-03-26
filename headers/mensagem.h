@@ -23,6 +23,8 @@
 #define MAXNAME 20
 #define MINNAME 3
 
+#define MSG_MAX_SIZE 280
+
 #define FOLLOW 0
 #define SEND 1
 #define QUIT 2
@@ -33,10 +35,12 @@
  typedef struct packet {
       uint16_t type; // tipo de pacote
       uint16_t seqn; // numero de sequencia
-      uint16_t lenght; // comprimento do payload
-      uint16_t timestamp; // timestamp do dado
-      char* dados; //dados da mensagem colocar tamanho maximo
+      uint16_t length; // comprimento do payload
+      uint16_t timestamp; // timestamp do dado     
       char username[MAXNAME];
+      char txt[MSG_MAX_SIZE];
+
+      char* dados; //dados da mensagem colocar tamanho maximo
      } PACOTE;
 
 

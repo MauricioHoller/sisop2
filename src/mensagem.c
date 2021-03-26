@@ -27,15 +27,18 @@ int readMessage(int socket, PACOTE *msg) {
 int sendMessage(int socket, PACOTE *msg) {
     unsigned n = 0;
     int r = 0;
-    puts(msg->dados);
+    
     msg->type = htons(msg->type);
     char *buff = (char*) msg;
+
+    //printf("\nLength of %s: %zu\n", msg->dados, strlen(msg->dados));
+
     do {
         r += write(socket, &buff[n], sizeof(PACOTE) - n);
         if(r <= 0) return r;
         n += r;
     } while(n < sizeof(PACOTE));
-    
+
     msg->type = ntohs(msg->type);
     return n;
 }
@@ -43,15 +46,20 @@ int sendMessage(int socket, PACOTE *msg) {
 void serverMessage(PACOTE* msg, int type, char* text) {
     msg->type = type;
     strncpy(msg->username, "SERVER", strlen("SERVER"));
-    strncpy(msg->dados, text, strlen(text));
+    //strncpy(msg->dados, text, strlen(text));
     //msg->dados = text;
+    msg->dados = calloc(strlen(text)+1, sizeof(char));
+    strncpy(msg->txt, text, strlen(text) + 1);
+    //puts(msg->dados);
 }
 
 void clientMessage(PACOTE* msg, int type, char* username, char* text) {
     msg->type = type;
     strncpy(msg->username, username, strlen(username) + 1);
-    //strncpy(msg->dados, text, strlen(text));
-    msg->dados = text;
+    
+    msg->dados = calloc(strlen(text)+1, sizeof(char));
+    strncpy(msg -> txt, text, strlen(text) + 1);
+
     msg->timestamp = time(NULL);
     	
 }

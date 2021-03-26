@@ -203,11 +203,12 @@ void listen_client(int client_socket, char *userid)
       if (byteCount < 0)
         printf("ERROR listening to the client\n");
 
-
-      
       switch (mensagem->type)
       {
-          case SEND: puts(mensagem->dados); printf("%s says: o\n", mensagem->username); break;
+          case SEND: 
+            if (mensagem->dados != NULL )
+              printf("%s says: %s\n", mensagem->username, mensagem -> txt); 
+            break;
         //case FLLOW: 
   	//case QUIT: 
   	//default: printf("ERROR invalid command\n");
