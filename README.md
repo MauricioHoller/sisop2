@@ -12,6 +12,9 @@ Teste only sends a message.
 TODO LIST:
 
 -> Modificar listas para colocar os followers de cada usuário;
+
 -> Criar pthread do cliente p/ receber as notificações;
+
 -> No server.c implementar os comandos [FOLLOW, QUIT ...];
+
 -> Implementar persistência dos dados;
