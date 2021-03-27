@@ -30,6 +30,10 @@ int sendMessage(int socket, PACOTE *msg) {
     
     msg->type = htons(msg->type);
     char *buff = (char*) msg;
+
+    //strncpy(msg->txt, "ola pedro", strlen("ola pedro") + 1);
+
+
     //printf("vou mandaaaar");
     //printf("\nLength of %s: %zu\n", msg->dados, strlen(msg->dados));
 

@@ -18,3 +18,4 @@ TODO LIST:
 -> No server.c implementar os comandos [FOLLOW, QUIT ...];
 
 -> Implementar persistência dos dados;
+
