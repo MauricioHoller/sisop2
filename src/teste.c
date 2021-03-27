@@ -11,7 +11,9 @@
 
 pthread_t sender, receiver; //produtor / consumidor
 
-char* username = "@leandro";
+#define MAX_USERNAME_SIZE 20
+
+char username[MAX_USERNAME_SIZE];
 
 void *clientSnd(void *args) {
     
@@ -70,13 +72,16 @@ void *clientRcv(void * args)
 }
 
 
-int main(int argc, char const *argv[]) 
+int main(int argc, char const* argv[]) 
 { 
     int sock = 0, valread; 
     struct sockaddr_in serv_addr; 
     char *Y = "Hello from client"; 
     char buffer[1024] = {0}; 
     char oi[256];
+
+    strncpy(username, argv[1], strlen(argv[1]) + 1);
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
         printf("\n Socket creation error \n"); 

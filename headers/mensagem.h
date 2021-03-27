@@ -23,7 +23,7 @@
 #define MAXNAME 20
 #define MINNAME 3
 
-#define MSG_MAX_SIZE 280
+#define MSG_MAX_SIZE 281
 
 #define FOLLOW 0
 #define SEND 1
