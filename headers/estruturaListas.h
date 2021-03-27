@@ -16,24 +16,27 @@ typedef struct client_list {
 typedef struct notification_list {
     struct notification_list * next;
 
-    char notification_txt[MSG_MAX_SIZE];    
+    char * notification_txt;    
     char ** users_to_notify;
     
 } NotificationList;
 
-void newList(struct client_list *client_list);
-void insertList(struct client_list **client_list, struct client client);
-int isEmpty(struct client_list *client_list);
-int findNode(char *userid, struct client_list *client_list, struct client_list **client_node);
 
+
+// Client list functions
+void new_client_list(struct client_list *client_list);
+
+void insert_client_list(struct client_list **client_list, struct client client);
+
+int  is_client_list_empty(struct client_list *client_list);
+
+int  find_client_node(char *userid, struct client_list *client_list, struct client_list **client_node);
+
+// Notification list functions
+NotificationList* new_notification_list(char* notification_txt, char ** users_notify);
+
+void insert_notification_list(NotificationList * current_list, NotificationList* insert_list);
 
 
 
 #endif
-
-
-
-
-
-
-

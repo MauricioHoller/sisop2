@@ -29,12 +29,13 @@ int main()
 
   socklen_t cliLen;
   struct sockaddr_in serv_addr, cli_addr;
-  
+  NotificationList* n_list = new_notification_list(NULL, NULL);
+
   pthread_t clientThread; //, syncThread; se precisar
 
   // inicializa lista de clientes
-  newList(client_list);
-
+  new_client_list(client_list);
+  // inicializa a lista de notificacoes 
   
   // abre o socket
   if ((serverSockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -61,6 +62,8 @@ int main()
   	
   cliLen = sizeof(struct sockaddr_in);
 
+
+  // Server main while
   while(1)
   {
 
@@ -88,13 +91,12 @@ int main()
 }
 
 
-
 void* client_thread (void *socket)
 {   
   int byteCount, connected;
   int *client_socket = (int*)socket;
 	char userid[MAXNAME];
-  char *hello = "ola";
+
   struct client client;
 	PACOTE msg, enviar; // colocar na lista de clientes
   	
@@ -156,22 +158,20 @@ void* client_thread (void *socket)
  /* */      	
 }
 
-
-
 int initializeClient(int client_socket, char *userid, struct client *client)
 {
   int i;  
   struct client_list *client_node; //vai apontar para o nodo da lista com o cliente se ele existir
 
   // não encontrou na lista ---- NEW CLIENT
-  if (!findNode(userid, client_list, &client_node))
+  if (!find_client_node(userid, client_list, &client_node))
   {
     client->devices[0] = client_socket;
     client->devices[1] = -1;
     strcpy(client->username, userid);
 
     // insere cliente na lista de client
-    insertList(&client_list, *client);
+    insert_client_list(&client_list, *client);
   }
   // encontrou CLIENT na lista, atualiza device
   else
@@ -206,8 +206,13 @@ void listen_client(int client_socket, char *userid)
       switch (mensagem->type)
       {
           case SEND: 
-            if (mensagem->dados != NULL )
+            if (mensagem->txt != NULL ) {
+             
               printf("%s says: %s\n", mensagem->username, mensagem -> txt); 
+              printf("Adding this message to notification_list");
+
+
+            } 
             break;
         //case FLLOW: 
   	//case QUIT: 
