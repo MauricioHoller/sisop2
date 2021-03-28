@@ -17,30 +17,25 @@ char username[MAX_USERNAME_SIZE];
 
 void *clientSnd(void *args) {
     
-
     int sockfd =  *((int *) args);
     
     PACOTE msg;
     msg.type = SEND;
 
     strncpy(msg.username, username, strlen(username) + 1);
+    
     do {
-
-
+    
         char msg_str[MSG_MAX_SIZE];
+
+        printf("#: ");
         fgets(msg_str, MSG_MAX_SIZE, stdin);
 
-        /* Remove trailing newline, if there. */
-        if ((strlen(msg_str) > 0) && (msg_str[strlen (msg_str) - 1] == '\n'))
-            msg_str[strlen (msg_str) - 1] = '\0';
-
-        strncpy(msg.txt, msg_str, strlen(msg_str) + 1);
-
+        parse_message(msg_str, &msg);
+       
         msg.seqn= msg.seqn+1;
-        
-        //puts(msg.txt);
+       
         sendMessage(sockfd, &msg);
-
 
 	
 	} while (msg.type != QUIT);

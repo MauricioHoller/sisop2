@@ -82,17 +82,3 @@ void login(int socket) {
     readMessage(socket, &mensagem);
 
 }
-
-
-
-
-  //  scanf("%s",oi);
-  
-  
-  //  send(sock , oi , strlen(oi) , 0 ); 
-  //  printf("Hello message sent\n"); 
-  //  login(sockfd));  
-	
-  //  printf("%s\n",buffer ); 
-	
-  

@@ -209,7 +209,7 @@ void listen_client(int client_socket, char *userid)
             if (mensagem->txt != NULL ) {
              
               printf("%s says: %s\n", mensagem->username, mensagem -> txt); 
-              printf("Adding this message to notification_list");
+              //printf("Adding this message to notification_list");
 
 
             } 

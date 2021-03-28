@@ -61,6 +61,8 @@ void serverMessage(PACOTE* msg, int type, char* text);
 int sendMessage(int socket, PACOTE *msg);
 int readMessage(int socket, PACOTE *msg);
 
+int get_msg_type (char * token);
+void parse_message(char *msg_txt, PACOTE * msg);
 
 #endif
 

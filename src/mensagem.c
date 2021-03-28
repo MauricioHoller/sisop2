@@ -69,6 +69,50 @@ void clientMessage(PACOTE* msg, int type, char* username, char* text) {
     	
 }
 
+int get_msg_type (char * token) {
+
+    if ( strcmp(token, "FOLLOW") == 0) { 
+        return  FOLLOW;
+    }
+    if ( strcmp(token, "SEND") == 0) { 
+        return  SEND;
+    }
+    if ( strcmp(token, "QUIT") == 0) { 
+        return  QUIT;
+    }
+    if ( strcmp(token, "LOGIN") == 0) { 
+        return  LOGIN;
+    }
+
+    return ERRO;
+}
 
 
+void parse_message(char *msg_txt, PACOTE * msg)
+{
+    if ((strlen(msg_txt) > 0) && (msg_txt[strlen (msg_txt) - 1] == '\n'))
+        msg_txt[strlen (msg_txt) - 1] = '\0';
+
+    
+    char *msg_buffer = strcpy(msg_buffer, msg_txt);
+
+    char *token = strtok(msg_buffer, " \t");
+    
+    msg -> type = get_msg_type(token);
+
+    if ( msg -> type == ERRO){
+        printf("Command %s not found\n", token);
+    }
+   
+    //puts(msg_txt + strlen(token) + 1);
+    //int number_of_chars_to_copy = strlen(msg_txt);
+
+    //printf("%d", number_of_chars_to_copy);
+
+    int copy_index = strlen(token) + 1;
+    int chars_to_copy = strlen(msg_txt) - copy_index;
+    strncpy(msg -> txt, msg_txt + copy_index,  chars_to_copy);
+
+    //puts(msg_tx + strlen(token) + 1, 1);
+}
 
