@@ -17,6 +17,12 @@
 
 #define FILE_LINE_BUFFER 16384
 
+typedef struct mensagensAEnviar{
+	struct mensagensAEnviar *prox;
+	PACOTE *msg;
+	char usuario[MAXNAME];
+} MensagensAenviar;
+
 
 typedef struct system_data_node {
 
