@@ -339,7 +339,6 @@ int tratadorSend(PACOTE *mensagem)
                                                                            //acha quem mandou a mensagem
 
   aux2 = usuario_mandou_msg->seguidores;
-
 	aux = client_list;
 
 	while (aux != NULL){
