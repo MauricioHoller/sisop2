@@ -77,7 +77,6 @@ SystemDataList *create_system_data_list()
 	return s_dlist;
 }
 
-
 void insert_system_data_list(SystemDataList *s_list, SystemDataNode *s_node) 
 {
 	SystemDataList * current = s_list;
@@ -90,6 +89,33 @@ void insert_system_data_list(SystemDataList *s_list, SystemDataNode *s_node)
 	}
 
 	insert_system_data_list(current -> next, s_node);
+}
+
+
+Client_seguidores *create_seguidores_list()
+{
+	Client_seguidores *s_list = (Client_seguidores*) malloc(sizeof(Client_seguidores));
+
+	strcpy(s_list -> seguidor, "");
+
+	s_list -> next = NULL;
+
+	return s_list;
+}
+
+void insert_seguidores_list(Client_seguidores *s_list, char *seguidor) 
+{
+	Client_seguidores * current = s_list;
+
+	if ( strcmp(current -> seguidor, "") == 0)
+	{
+		strcpy( current -> seguidor, seguidor);
+		current -> next = create_seguidores_list();
+		return;
+	}
+
+	insert_seguidores_list(current -> next, seguidor);
+
 }
 
 
@@ -107,13 +133,72 @@ char* parse_string(char* string) {
     return out_str;
 }
 
+
 Client_seguidores * parse_seguidores(char *token)
 {
 
+	Client_seguidores * seguidores = create_seguidores_list();
+
+	char * parsed_str = parse_string(token);
+
+	//printf("%s", parsed_str);
 	
+	char *n_token = strtok(parsed_str, ",");
+
+	while (n_token) 
+	{
+		//printf("Seguidor: %s\n", n_token);
+		insert_seguidores_list (seguidores, n_token);
+		n_token = strtok(NULL, ",");
+
+	}
+
+	return seguidores;
+}
+
+int count_notification_number(char * string) 
+{
+	int nro_notificacoes = 0;
+
+	char *parsed_str = parse_string(string);
+
+	char *n_token = strtok(parsed_str, ",");
+
+	while (n_token)
+	{
+		nro_notificacoes++; 
+		n_token = strtok(NULL, ",");
+	}
+
+	return nro_notificacoes;
+
+}
+
+
+int * parse_fila_notificacoes(char *string)
+{	
+
+
+	int index = 0;
+	int* arr = (int*) malloc(count_notification_number(string)  * sizeof(int));
+
+	char *parsed_str = parse_string(string);
+
+	char *n_token = strtok(parsed_str, ",");
+	
+	while (n_token)
+	{
+		arr[index] = atoi(n_token);
+		n_token = strtok(NULL, ",");
+		index++;
+	}
+
+
+	return arr;
 }
 
 SystemDataList* carregaSystemData(){
+	
 
 	FILE *csv_file;
 	SystemDataList *s_data;
@@ -141,14 +226,14 @@ SystemDataList* carregaSystemData(){
 
 		if (row == 1)
 			continue; 
-
-		col = 0;
-		row++;
+		
+		printf("Line: %s\n", line_buffer);
 
 		char *token = strtok(line_buffer, ";");
 
 		while (token) 
 		{
+			//puts(aux_token);
 			switch (col)
 			{
 			case COL_USERNAME:
@@ -156,13 +241,19 @@ SystemDataList* carregaSystemData(){
 				break;
 
 			case COL_SEGUIDORES:
-				node -> seguidores = parse_seguidores(token);
+				if (strcmp(token, "\"\"") != 0) {
+					node -> seguidores = parse_seguidores(token);
+				}
 				break;
 			case COL_NOTIFICACOES:
-				//node -> mensagens = parse_notificacoes(token);
+				if (strcmp(token, "\"\"") != 0) {
+					//node -> mensagens = parse_string(token);
+				}
 				break;
 			case COL_FILA_NOTIFICACOES:
-				//node -> fila_notificacoes = parse_fila_notificacoes(token);
+				if (strcmp(token, "\"\"") != 0) {
+					node -> fila_notificacoes = parse_fila_notificacoes(token);
+				}
 				break;
 
 			default:
@@ -170,10 +261,9 @@ SystemDataList* carregaSystemData(){
 				break;
 			}
 
-			printf("%s\n", token);
+			printf("column: %d token:%s\n", col, token);
 			token = strtok(NULL, ";");
 			col++;
-
 		}
 		insert_system_data_list(s_data, node);
 	}

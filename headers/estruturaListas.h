@@ -17,12 +17,15 @@
 
 #define FILE_LINE_BUFFER 16384
 
+#define MAX_NOTIFICACOES 100
 
 typedef struct system_data_node {
 
     char* username;
     char** mensagens;
+
     int* fila_notificacoes;
+    int total_de_notificacoes;
     struct seguidores * seguidores;
 
 } SystemDataNode; 
@@ -65,9 +68,13 @@ void insert_system_data_list(SystemDataList *s_list, SystemDataNode *s_node);
 char* parse_string(char* string) ;
 
 char** parse_notificacoes(char *token);
+
 int* parse_fila_notificacoes(char *token);
 
-struct seguidores * parse_seguidores(char *token);
+
+Client_seguidores *create_seguidores_list();
+void insert_seguidores_list(Client_seguidores *s_list, char *seguidor) ;
+Client_seguidores * parse_seguidores(char *token);
 
 #endif
 
