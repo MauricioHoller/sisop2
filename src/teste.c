@@ -10,7 +10,7 @@
 #define PORT 2000
 
 pthread_t sender, receiver; //produtor / consumidor
-char* username = "@mac";
+char* username;
 
 
 
