@@ -208,15 +208,22 @@ void listen_client(int client_socket, char *userid)
           case SEND: 
             if (mensagem->txt != NULL ) {
              
-              printf("%s says: %s\n", mensagem->username, mensagem -> txt); 
+              printf("%s says: '%s' to his followers\n", mensagem->username, mensagem -> txt); 
               //printf("Adding this message to notification_list");
-
-
             } 
             break;
-        //case FLLOW: 
-  	//case QUIT: 
-  	//default: printf("ERROR invalid command\n");
+          case FOLLOW:
+            printf("Follow action");
+            break;
+          case QUIT:
+            printf("Quit action");
+            break;
+          case LOGIN:
+            printf("Login action");
+            break;
+          default:
+            printf("Invalid command!");
+
       }
   } while(mensagem->type != QUIT);
 

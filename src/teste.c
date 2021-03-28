@@ -105,7 +105,7 @@ int main(int argc, char const* argv[])
     pthread_create(&receiver, NULL, clientRcv, &sock);
 
     clientSnd(&sock);
-    // producer
+    
     //pthread_create(&sender, NULL, clientSnd, &sock);
 
     //pthread_create()

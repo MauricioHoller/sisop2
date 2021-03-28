@@ -31,12 +31,6 @@ int sendMessage(int socket, PACOTE *msg) {
     msg->type = htons(msg->type);
     char *buff = (char*) msg;
 
-    //strncpy(msg->txt, "ola pedro", strlen("ola pedro") + 1);
-
-
-    //printf("vou mandaaaar");
-    //printf("\nLength of %s: %zu\n", msg->dados, strlen(msg->dados));
-
     do {
         r += write(socket, &buff[n], sizeof(PACOTE) - n);
         if(r <= 0) return r;
@@ -104,15 +98,10 @@ void parse_message(char *msg_txt, PACOTE * msg)
         printf("Command %s not found\n", token);
     }
    
-    //puts(msg_txt + strlen(token) + 1);
-    //int number_of_chars_to_copy = strlen(msg_txt);
-
-    //printf("%d", number_of_chars_to_copy);
 
     int copy_index = strlen(token) + 1;
     int chars_to_copy = strlen(msg_txt) - copy_index;
     strncpy(msg -> txt, msg_txt + copy_index,  chars_to_copy);
 
-    //puts(msg_tx + strlen(token) + 1, 1);
 }
 
