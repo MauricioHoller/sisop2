@@ -16,6 +16,8 @@ void insertList(struct client_list **client_list, struct client client)
 	struct client_list *client_node;
 	struct client_list *client_list_aux = *client_list;
 
+
+
 	client_node = malloc(sizeof(struct client_list));
 
 	client_node->client = client;
@@ -32,6 +34,10 @@ void insertList(struct client_list **client_list, struct client client)
 
 		client_list_aux->next = client_node;
 	}
+
+
+
+	return;
 }
 
 int isEmpty(struct client_list *client_list)

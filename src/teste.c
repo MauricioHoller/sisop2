@@ -71,6 +71,7 @@ void *clientSnd(void *args) {
 
 
         char msg_str[MSG_MAX_SIZE];
+        printf("#: ");
         fgets(msg_str, MSG_MAX_SIZE, stdin);
         
         //msg.type = verificaTipo(aux);

@@ -15,6 +15,7 @@ typedef struct seguidores {
 typedef struct client_list {
     struct client_list * next; //proximo da lista
     Cliente client; //cliente
+
     struct seguidores *me_seguem;
     struct seguidores *seguidores;	
 } Client_list;
