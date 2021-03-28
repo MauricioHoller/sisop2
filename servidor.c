@@ -216,11 +216,12 @@ void listen_client(int client_socket, char *userid)
           case SEND: 
             if (mensagem->dados != NULL )
               //printf("%s says: %s\n", mensagem->username, mensagem -> txt); 
-              tratadorSend(mensagem); 
-            //sendMessage(client_socket, mensagem);
+//              tratadorSend(mensagem); 
+            sendMessage(client_socket, mensagem);
             break;
         case FOLLOW: 
         tratamentoFollow(mensagem);
+        
         //tratador_meSeguem(mensagem);
          break;
         
@@ -254,26 +255,37 @@ int tratamentoFollow(PACOTE *mensagem){
 	}
     if (usuario_mandou_msg->seguidores == NULL){ // se ainda não seguiu ninguem
   	 if(findNode(mensagem->txt,client_list,&aux) == 0){
+
   	 	printf("Usuario inexistente para seguir \n");
+
   	 	return -1; // Não existe Usuario com esse nome para seguir
     	}
     
      	usuario_mandou_msg->seguidores = malloc(sizeof(struct seguidores)); 
+
  	strncpy(usuario_mandou_msg->seguidores->seguidor,mensagem->txt,strlen(mensagem->txt)+1);
+
      	usuario_mandou_msg->next = NULL;
+
 	printf("conseguiu \n");
   	 	
      }
      else{ // se ja seguiu alguem
-     
+     /*
 	 if(findNode(mensagem->txt,client_list,&aux) == 0){
+
   	 	printf("Usuario inexistente para seguir \n");
+
   	 	return -1; // Não existe Usuario com esse nome para seguir
     	}
+*/
         aux2 = usuario_mandou_msg->seguidores;
+
  	while (aux2 != NULL){
  		if (strcmp(aux2->seguidor,mensagem->txt) == 0){
+
  			printf("Já é um seguidor \n");
+
  			return -1;
  		}
  		aux2=aux2->next;
@@ -302,7 +314,7 @@ int tratador_meSeguem( PACOTE *mensagem){
     	struct client_list *aux2 = client_list; 
 	printf("txt da msg %s \n",mensagem->txt);
     	 
-    	 for (aux2;aux2 != NULL;aux2=aux2->next){
+    	for (aux2;aux2 != NULL;aux2=aux2->next){
     	 	if (strcmp(aux2->client.username,mensagem->txt)==0)
     			printf("username da msg %s \n",aux2->client.username);
     	 		break;
@@ -392,24 +404,4 @@ int tratadorSend(PACOTE *mensagem){
 */ 
 return 0;
 }
-/*
- typedef struct packet {
-      uint16_t type; // tipo de pacote
-      uint16_t seqn; // numero de sequencia
-      uint16_t length; // comprimento do payload
-      uint16_t timestamp; // timestamp do dado     
-      char username[MAXNAME];
-      char txt[MSG_MAX_SIZE];
-
-      char* dados; //dados da mensagem colocar tamanho maximo
-     } PACOTE;
-
-
-*/
-
-
-
-
-
-
 
