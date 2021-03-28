@@ -86,7 +86,7 @@ int main()
     }
 
 
-    sleep(1000);
+    sleep(100);
   }
 }
 
@@ -213,12 +213,12 @@ void listen_client(int client_socket, char *userid)
             } 
             break;
 
-          case FOLLOW:
-            printf("%s follows %s\n", mensagem->username, mensagem->txt);
+          case QUIT:
+            printf("%s quits its session\n", mensagem->username);
             break;
 
-          case QUIT:
-            printf("%s quits the session\n", mensagem->username);
+          case FOLLOW:
+            printf("%s follows %s\n", mensagem->username, mensagem->txt);
             break;
 
           case LOGIN:
@@ -229,8 +229,10 @@ void listen_client(int client_socket, char *userid)
             printf("Invalid command!\n");
             break;
       }
-  } while(mensagem->type != QUIT);
+      
+  } while( mensagem -> type != QUIT );
 
+  printf("Quiting");
 }
 
 

@@ -80,7 +80,7 @@ int get_msg_type (char * token) {
 }
 
 
-void parse_message(char *msg_txt, PACOTE * msg)
+void parse_message_str(char *msg_txt, PACOTE * msg)
 {
     if ((strlen(msg_txt) > 0) && (msg_txt[strlen (msg_txt) - 1] == '\n'))
         msg_txt[strlen (msg_txt) - 1] = '\0';
@@ -96,7 +96,12 @@ void parse_message(char *msg_txt, PACOTE * msg)
         printf("Command %s not found\n", token);
         return;
     }
-   
+    
+    if (msg -> type == QUIT ) {
+        printf("Lets quit my boy");
+        return;
+    }
+
     int copy_index = strlen(token) + 1;
     int chars_to_copy = strlen(msg_txt) - copy_index;
     strncpy(msg -> txt, msg_txt + copy_index,  chars_to_copy);

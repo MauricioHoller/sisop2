@@ -1,4 +1,5 @@
 server
 teste
+client
 *.o
 .vscode/*
