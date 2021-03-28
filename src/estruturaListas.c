@@ -59,26 +59,30 @@ int find_client_node(char *userid, struct client_list *client_list, struct clien
 	return 0;
 }
 
-NotificationList *new_notification_list(char* notification_txt, char ** users_notify)
+NotificationList *new_notification_list()
 {
 
     NotificationList *n_list = (NotificationList *)malloc(sizeof(NotificationList));
 
-	if (notification_txt != NULL && users_notify != NULL){ 
-		strcpy(n_list -> notification_txt, notification_txt);
-		memcpy(n_list -> users_to_notify, users_notify, sizeof(users_notify));
-		return n_list;
-	}
 
-	n_list -> notification_txt = NULL;
+	n_list -> notification = NULL;
 	n_list -> users_to_notify = NULL;
-	
+
     return n_list;
 }
 
-void insert_notification_list(NotificationList * current_list, NotificationList* insert_list) {
+void insert_notification(NotificationList * n_list, Notification* new_notification) {
+	
+	NotificationList *current = n_list;
 
+    if (n_list -> notification == NULL)
+    {
 
+        n_list->notification = new_notification;
+        n_list->next = new_notification_list();
+        return;
+    }
 
-	return;
+    insert_notification (n_list->next, new_notification);
+
 }

@@ -32,11 +32,12 @@ void *clientSnd(void *args) {
         fgets(msg_str, MSG_MAX_SIZE, stdin);
 
         parse_message(msg_str, &msg);
-       
-        msg.seqn= msg.seqn+1;
-       
-        sendMessage(sockfd, &msg);
-
+        
+        if (msg.type != ERRO) {
+            msg.seqn= msg.seqn+1;
+        
+            sendMessage(sockfd, &msg);
+         }
 	
 	} while (msg.type != QUIT);
 

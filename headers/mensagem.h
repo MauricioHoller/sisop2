@@ -32,7 +32,7 @@
 #define ERRO 4
 
 
- typedef struct packet {
+typedef struct packet {
       uint16_t type; // tipo de pacote
       uint16_t seqn; // numero de sequencia
       uint16_t length; // comprimento do payload
@@ -41,20 +41,16 @@
       char txt[MSG_MAX_SIZE];
 
       char* dados; //dados da mensagem colocar tamanho maximo
-     } PACOTE;
+} PACOTE;
 
-
-
-/* não foi utilizado
-
- typedef struct notification {
+typedef struct notification {
       uint32_t id; // identificador
       uint32_t timestamp; // timestamp da notificação
       char* mensagem; //mensagem
       uint16_t lenght; // tamanho da mensagem
       uint16_t pendentes; // quantidade de leitores pendentes
-     } MENSAGEM;
-*/
+} Notification;
+
 
 void clientMessage(PACOTE* msg, int type, char* username, char* text);
 void serverMessage(PACOTE* msg, int type, char* text);

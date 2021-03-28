@@ -45,11 +45,9 @@ int sendMessage(int socket, PACOTE *msg) {
 void serverMessage(PACOTE* msg, int type, char* text) {
     msg->type = type;
     strncpy(msg->username, "SERVER", strlen("SERVER"));
-    //strncpy(msg->dados, text, strlen(text));
-    //msg->dados = text;
+
     msg->dados = calloc(strlen(text)+1, sizeof(char));
     strncpy(msg->txt, text, strlen(text) + 1);
-    //puts(msg->dados);
 }
 
 void clientMessage(PACOTE* msg, int type, char* username, char* text) {
@@ -91,14 +89,14 @@ void parse_message(char *msg_txt, PACOTE * msg)
     char *msg_buffer = strcpy(msg_buffer, msg_txt);
 
     char *token = strtok(msg_buffer, " \t");
-    
+
     msg -> type = get_msg_type(token);
 
-    if ( msg -> type == ERRO){
+    if ( msg -> type == ERRO ) {
         printf("Command %s not found\n", token);
+        return;
     }
    
-
     int copy_index = strlen(token) + 1;
     int chars_to_copy = strlen(msg_txt) - copy_index;
     strncpy(msg -> txt, msg_txt + copy_index,  chars_to_copy);

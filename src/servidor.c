@@ -212,18 +212,22 @@ void listen_client(int client_socket, char *userid)
               //printf("Adding this message to notification_list");
             } 
             break;
-          case FOLLOW:
-            printf("Follow action");
-            break;
-          case QUIT:
-            printf("Quit action");
-            break;
-          case LOGIN:
-            printf("Login action");
-            break;
-          default:
-            printf("Invalid command!");
 
+          case FOLLOW:
+            printf("%s follows %s\n", mensagem->username, mensagem->txt);
+            break;
+
+          case QUIT:
+            printf("%s quits the session\n", mensagem->username);
+            break;
+
+          case LOGIN:
+            printf("%s logs in\n", mensagem->username);
+            break;
+
+          default:
+            printf("Invalid command!\n");
+            break;
       }
   } while(mensagem->type != QUIT);
 
