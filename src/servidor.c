@@ -20,13 +20,19 @@
 
 #define PORT 2000
 
-struct client_list *client_list; // lista de clientes
+Client_list *client_list; // lista de clientes
 
 pthread_mutex_t lock_insert;
+
+SystemDataList* system_data;
+
+pthread_mutex_t system_data_mutex;
 
 int main()
 {
 
+  system_data = carregaSystemData();
+  
   int serverSockfd, newsockfd, thread;
 
   socklen_t cliLen;
