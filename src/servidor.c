@@ -215,8 +215,8 @@ void listen_client(int client_socket, char *userid)
     case SEND:
       if (mensagem->dados != NULL)
         //printf("%s says: %s\n", mensagem->username, mensagem -> txt);
-        //              tratadorSend(mensagem);
-        sendMessage(client_socket, mensagem);
+                      tratadorSend(mensagem);
+        //sendMessage(client_socket, mensagem);
       break;
     case FOLLOW:
       tratamentoFollow(mensagem);
@@ -378,9 +378,10 @@ int tratadorSend(PACOTE *mensagem)
                                                                            //acha quem mandou a mensagem
 
   aux2 = usuario_mandou_msg->seguidores;
-
+/*
   while (aux2 != NULL)
   {
+  
     if (findNode(aux2->seguidor, client_list, &enviar_msg) == 1)
     {
       //printf("%d\n %s \n",enviar_msg->client.socket , enviar_msg->client.username);
@@ -392,16 +393,17 @@ int tratadorSend(PACOTE *mensagem)
     aux2 = aux2->next;
   }
 
-  /*
+  */
 	aux = client_list;
+
 	while (aux != NULL){
 
 		aux2= aux->seguidores;
-	//	if (strcmp(aux->client.username , mensagem->username)!=0){
+		if (strcmp(aux->client.username , mensagem->username)!=0){
 	 		while (aux2 != NULL){ //verifica todos os seguidores de todos os clientes
 		 		
-		 		if (strcmp(aux2->seguidor, mensagem->username)==0)
-		 			if (findNode( aux2->seguidor, client_list , &enviar_msg)==1){		 				      printf("%d\n %s \n",enviar_msg->client.devices[0] , enviar_msg->client.username);
+	 			if (strcmp(aux2->seguidor, mensagem->username)==0)
+	 			if (findNode( aux->client.username, client_list , &enviar_msg)==1){				      			printf("%d\n chegou aqui %s \n",enviar_msg->client.devices[0] , enviar_msg->client.username);
 						if (enviar_msg->client.devices[0] != FREEDEV)
 						sendMessage(enviar_msg->client.devices[0], mensagem);
 						if (enviar_msg->client.devices[1] != FREEDEV)
@@ -410,9 +412,9 @@ int tratadorSend(PACOTE *mensagem)
 		 		}
 		 	aux2=aux2->next;
 	 		}
-	 //	}
+	 	}
 	aux = aux->next;
 }
-*/
+
   return 0;
 }
