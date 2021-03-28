@@ -353,7 +353,7 @@ int tratadorSend(PACOTE *mensagem){
 	     //acha quem mandou a mensagem
 	     
 	     
- 	aux2 = usuario_mandou_msg->me_seguem;
+ 	aux2 = usuario_mandou_msg->seguidores;
  	
  	while (aux2 != NULL){
  		if (findNode( aux2->seguidor, client_list , &enviar_msg)==1)
