@@ -216,7 +216,8 @@ void listen_client(int client_socket, char *userid)
       if (mensagem->dados != NULL)
         //printf("%s says: %s\n", mensagem->username, mensagem -> txt);
         //              tratadorSend(mensagem);
-        sendMessage(client_socket, mensagem);
+        tratadorSend(mensagem);
+
       break;
     case FOLLOW:
       tratamentoFollow(mensagem);
@@ -243,6 +244,8 @@ int tratamentoFollow(PACOTE *mensagem)
   struct client_list *aux;
 
   struct seguidores *aux2;
+
+  struct seguidores *previous;
 
   //verifica se o cliente ja esta em execução
   if (findNode(mensagem->username, client_list, &usuario_mandou_msg) == 0) //client list é variavel global
@@ -271,7 +274,7 @@ int tratamentoFollow(PACOTE *mensagem)
 
     usuario_mandou_msg-> seguidores -> next = NULL;
 
-    printf("conseguiu \n");
+    printf("Seguindo o primeiro: %s \n", mensagem->txt);
     
     pthread_mutex_unlock(&lock_insert);
 
@@ -280,9 +283,11 @@ int tratamentoFollow(PACOTE *mensagem)
   {
 
     aux2 = usuario_mandou_msg -> seguidores;
+    
 
     while (aux2 != NULL)
     {
+
       if (strcmp(aux2->seguidor, mensagem->txt) == 0)
       {
 
@@ -291,6 +296,7 @@ int tratamentoFollow(PACOTE *mensagem)
         return -1;
       }
 
+      previous = aux2;
       aux2 = aux2->next;
 
 
@@ -300,63 +306,18 @@ int tratamentoFollow(PACOTE *mensagem)
 
     aux2 = malloc(sizeof(struct seguidores));
 
-    strncpy(aux2->seguidor, mensagem->txt, strlen(mensagem->txt) + 1);
+    strncpy(aux2 -> seguidor, mensagem->txt, strlen(mensagem->txt) + 1);
 
     aux2 -> next = NULL;
 
+    previous -> next = aux2;
+    
     pthread_mutex_unlock(&lock_insert);
     
-    printf("conseguiu \n");
+    printf("Seguindo mais um: %s \n", mensagem -> txt);
 
     return 0;
   }
-
-  return 0;
-}
-
-/* NÂO FUNCIONA*/
-int tratador_meSeguem(PACOTE *mensagem)
-{
-
-  struct seguidores *aux;
-
-  struct client_list *usuario_a_seguir;
-
-  struct client_list *aux2 = client_list;
-  printf("txt da msg %s \n", mensagem->txt);
-
-  for (aux2; aux2 != NULL; aux2 = aux2->next)
-  {
-    if (strcmp(aux2->client.username, mensagem->txt) == 0)
-      printf("username da msg %s \n", aux2->client.username);
-    break;
-  }
-  if (aux2 == NULL)
-  {
-    printf("erro ao alocar seguidor \n");
-    return -1;
-  }
-
-  aux = aux2->me_seguem;
-  while (aux != NULL)
-  {
-    printf("%s \n", aux2->me_seguem->seguidor);
-    if (strcmp(aux->seguidor, mensagem->username) == 0)
-    {
-      printf("Já é um seguidor \n");
-      return -1;
-    }
-
-    printf("lista de seguidores %s \n", aux->seguidor);
-    aux = aux->next;
-  }
-
-  aux = malloc(sizeof(struct seguidores));
-
-  strncpy(aux->seguidor, mensagem->username, strlen(mensagem->txt) + 1);
-  printf("seguidor alocado %s \n", aux->seguidor);
-
-  aux->next = NULL;
 
   return 0;
 }
@@ -379,29 +340,16 @@ int tratadorSend(PACOTE *mensagem)
 
   aux2 = usuario_mandou_msg->seguidores;
 
-  while (aux2 != NULL)
-  {
-    if (findNode(aux2->seguidor, client_list, &enviar_msg) == 1)
-    {
-      //printf("%d\n %s \n",enviar_msg->client.socket , enviar_msg->client.username);
-      if (enviar_msg->client.devices[0] != FREEDEV)
-        sendMessage(enviar_msg->client.devices[0], mensagem);
-      if (enviar_msg->client.devices[1] != FREEDEV)
-        sendMessage(enviar_msg->client.devices[1], mensagem);
-    }
-    aux2 = aux2->next;
-  }
-
-  /*
 	aux = client_list;
+
 	while (aux != NULL){
 
 		aux2= aux->seguidores;
-	//	if (strcmp(aux->client.username , mensagem->username)!=0){
+		if (strcmp(aux->client.username , mensagem->username)!=0){
 	 		while (aux2 != NULL){ //verifica todos os seguidores de todos os clientes
 		 		
-		 		if (strcmp(aux2->seguidor, mensagem->username)==0)
-		 			if (findNode( aux2->seguidor, client_list , &enviar_msg)==1){		 				      printf("%d\n %s \n",enviar_msg->client.devices[0] , enviar_msg->client.username);
+	 			if (strcmp(aux2->seguidor, mensagem->username)==0)
+	 			if (findNode( aux->client.username, client_list , &enviar_msg)==1){				      			
 						if (enviar_msg->client.devices[0] != FREEDEV)
 						sendMessage(enviar_msg->client.devices[0], mensagem);
 						if (enviar_msg->client.devices[1] != FREEDEV)
@@ -410,9 +358,9 @@ int tratadorSend(PACOTE *mensagem)
 		 		}
 		 	aux2=aux2->next;
 	 		}
-	 //	}
+	 	}
 	aux = aux->next;
 }
-*/
+
   return 0;
 }

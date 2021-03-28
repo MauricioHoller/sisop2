@@ -112,6 +112,7 @@ void *clientRcv(void * args)
 
         if (strlen(msg->txt) > 0 ){
          printf("%s says: %s\n", msg->username, msg -> txt); 
+         printf("#: ");
         }
         if (msg->type == ERRO){
         printf("Ocorreu um erro");
