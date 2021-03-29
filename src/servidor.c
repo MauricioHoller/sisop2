@@ -206,7 +206,7 @@ void listen_client(int client_socket, char *userid)
 
   PACOTE *mensagem;
   int byteCount;
-
+	enviaMSGNotificacao();
   do
   {
 
@@ -359,9 +359,9 @@ int tratadorSend(PACOTE *mensagem)
 	 			if (findNode( aux->client.username, client_list , &enviar_msg)==1){				      			
 						if (enviar_msg->client.devices[0] != FREEDEV)
 						sendMessage(enviar_msg->client.devices[0], mensagem);
-						if (enviar_msg->client.devices[1] != FREEDEV)
+						else if (enviar_msg->client.devices[1] != FREEDEV)
 						sendMessage(enviar_msg->client.devices[1], mensagem);
-			 		
+			 			else {trataNotificacao(aux->client.username,mensagem->username, mensagem->txt); }
 		 		}
 		 	aux2=aux2->next;
 	 		}
@@ -372,29 +372,33 @@ int tratadorSend(PACOTE *mensagem)
   return 0;
 }
 
-void trataNotificacao(PACOTE *mensagem, char *usuario_a_receber){
+void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt){
 
 	struct mensagensAEnviar *aux;
 	struct mensagensAEnviar *aux2;
 	
 	aux = notificacao;
+	
 	if (notificacao != NULL){	
+	
 	while (aux!=NULL){
+     
       aux2 = aux;
+     
       aux = aux2->prox;
 	}
     pthread_mutex_lock(&lock_insert);
 
 	aux = malloc(sizeof(struct mensagensAEnviar));
 	
-	aux->msg=mensagem;	
-	
 	strcpy(aux->usuario,usuario_a_receber);
+	strcpy(aux->usuario_envio,usuario_enviou);
+	strcpy(aux->txt,txt);
 	
 	aux->prox=NULL;
 
-    aux2 -> prox = aux;
-    
+   	aux2 -> prox = aux;
+ 	printf("mensagem guardada de %s para %s \n",aux->usuario_envio,aux->usuario);   
     pthread_mutex_unlock(&lock_insert);
     
 }
@@ -404,12 +408,13 @@ void trataNotificacao(PACOTE *mensagem, char *usuario_a_receber){
 
  	notificacao = malloc(sizeof(struct mensagensAEnviar));
 	
-	notificacao->msg = mensagem;	
+	strcpy(notificacao->usuario , usuario_a_receber);	
+	strcpy(notificacao->usuario_envio,usuario_enviou);
+	strcpy(notificacao->txt,txt);
 	
-	strcpy(notificacao->usuario , usuario_a_receber);
 	
 	notificacao->prox=NULL;
- 
+ 	printf("mensagem guardada de %s para %s \n",notificacao->usuario_envio,notificacao->usuario);	
     pthread_mutex_unlock(&lock_insert);
     
  }
@@ -423,41 +428,54 @@ void enviaMSGNotificacao(void){
 	struct mensagensAEnviar *aux;
 	
 	struct mensagensAEnviar *previous;
+	PACOTE *msg;
 	struct client_list *enviar_msg;	
 	aux = notificacao;
 	int enviou=-1;
 	previous = NULL;
-    pthread_mutex_lock(&lock_insert);
-
-	while (aux!=NULL){
 	
+	if (notificacao!=NULL){
+        pthread_mutex_lock(&lock_insert);
+    	
+    		printf("ENTROU NO LOOP");
+	while (aux!=NULL){
+  	
 	if (findNode( aux->usuario, client_list , &enviar_msg)==1){				      			
+      			msg=malloc(sizeof(PACOTE));
+      			strcpy(msg->username,aux->usuario_envio);
+			strcpy(msg->txt,aux->txt);
+
+
 			if (enviar_msg->client.devices[0] != FREEDEV){
-				sendMessage(enviar_msg->client.devices[0], aux->msg);
-				enviou=1;
-			}
-			if (enviar_msg->client.devices[1] != FREEDEV){
-				sendMessage(enviar_msg->client.devices[1], aux->msg);
-				enviou=1;
-				}
-      		printf("tentando enviar msg para %s",aux->usuario);
-      	}		
-      	
-      	
-	      	if (enviou >0){
+			
 	      		previous = aux->prox;
+
 			free(aux);      	
+
 	      		aux=previous;
-	      	}
-	      	else{
-	      	previous=aux;
-		aux=aux->prox;
-		}
-	enviou=-1;
+
+			sendMessage(enviar_msg->client.devices[0], msg);
+			}
+			else if (enviar_msg->client.devices[1] != FREEDEV){
+				sendMessage(enviar_msg->client.devices[1], msg);
+
+		      		previous = aux->prox;
+
+				free(aux);      	
+
+		      		aux=previous;
+				}
+      		      	else{
+		      	previous=aux;
+			aux=aux->prox;
+			}
+			free(msg);
 	}
 	    pthread_mutex_unlock(&lock_insert);
-
 }
+}
+}
+
 
 void tratamentoQuit(int client_socket, PACOTE *mensagem){
 
@@ -497,4 +515,3 @@ void tratamentoQuit(int client_socket, PACOTE *mensagem){
    
 
 }
-
