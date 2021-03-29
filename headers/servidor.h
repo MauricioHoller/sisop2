@@ -27,7 +27,8 @@ int tratadorSend(PACOTE *mensagem);
 int tratador_meSeguem(PACOTE *mensagem);
 
 void tratamentoQuit(int client_socket, PACOTE *mensagem);
-void trataNotificacao(PACOTE *mensagem, char *usuario_a_receber);
+//void trataNotificacao(PACOTE *mensagem, char *usuario_a_receber);
+void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt);
 void enviaMSGNotificacao(void);
 
 
