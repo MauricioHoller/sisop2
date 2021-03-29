@@ -426,7 +426,7 @@ void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt){
 void enviaMSGNotificacao(void){
 
 	struct mensagensAEnviar *aux;
-	
+	int cont=0;	
 	struct mensagensAEnviar *previous;
 	PACOTE *msg;
 	struct client_list *enviar_msg;	
@@ -445,7 +445,7 @@ void enviaMSGNotificacao(void){
       			strcpy(msg->username,aux->usuario_envio);
 			strcpy(msg->txt,aux->txt);
 
-
+			if (cont>0){
 			if (enviar_msg->client.devices[0] != FREEDEV){
 			
 	      		previous = aux->prox;
@@ -469,6 +469,8 @@ void enviaMSGNotificacao(void){
 		      	previous=aux;
 			aux=aux->prox;
 			}
+			}
+			cont++;
 			free(msg);
 	}
 	    pthread_mutex_unlock(&lock_insert);
