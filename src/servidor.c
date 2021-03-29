@@ -415,7 +415,7 @@ void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt){
 	
 	notificacao->prox=NULL;
  	printf("mensagem guardada de %s para %s \n",notificacao->usuario_envio,notificacao->usuario);	
-    pthread_mutex_unlock(&lock_insert);
+  pthread_mutex_unlock(&lock_insert);
     
  }
 
@@ -437,7 +437,7 @@ void enviaMSGNotificacao(void){
 	if (notificacao!=NULL){
         pthread_mutex_lock(&lock_insert);
     	
-    		printf("ENTROU NO LOOP");
+    		//printf("ENTROU NO LOOP");
 	while (aux!=NULL){
   	
 	if (findNode( aux->usuario, client_list , &enviar_msg)==1){				      			

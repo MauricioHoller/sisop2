@@ -45,7 +45,6 @@ typedef struct mensagensAEnviar{
 	char usuario_envio[MAXNAME];
 	
 	char usuario[MAXNAME];
-	
 	char txt[280];
 
 

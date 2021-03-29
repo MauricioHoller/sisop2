@@ -39,7 +39,7 @@ int verificaTipo(char *msg){
 	if (strcmp(aux,"FOLLOW") == 0)
 		return FOLLOW;
 
-	return SEND;
+	return ERRO;
 
 }
 
