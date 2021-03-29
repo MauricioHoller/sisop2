@@ -30,7 +30,7 @@
 #define QUIT 2
 #define LOGIN 3
 #define ERRO 4
-#define SAIR 4
+#define SAIR 7
 
 
  typedef struct packet {
