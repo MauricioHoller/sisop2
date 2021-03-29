@@ -26,6 +26,10 @@ int verificaTipo(char *msg){
 	char aux[10]; 
      	
 	int i;
+	
+	if (strcmp(msg,"QUIT") == 0)
+		return SAIR;
+
 	if (strlen (msg)>4){
 		for (i=0;msg[i] != ' ';i++){
 			aux[i] = msg[i]; 
@@ -96,7 +100,7 @@ void *clientSnd(void *args) {
         
         sendMessage(sockfd, &msg);
 	
-	} while (msg.type != QUIT);
+	} while (msg.type != SAIR);
 
     close(sockfd);
     
