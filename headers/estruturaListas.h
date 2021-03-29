@@ -19,10 +19,31 @@
 
 #define MAX_NOTIFICACOES 100
 
+
+typedef struct notification {
+
+    char* notification_txt;
+    int   notification_id;
+    int   msg_size;
+    int   ppl_yet_to_receive;
+
+    uint16_t timestamp;
+    
+
+} Notification;
+
+
+typedef struct notification_list {
+
+    struct notification_list * next;
+    Notification * notification;
+
+} NotificationList;
+
 typedef struct system_data_node {
 
     char* username;
-    char** mensagens;
+    NotificationList* mensagens;
 
     int* fila_notificacoes;
     int total_de_notificacoes;
@@ -55,6 +76,7 @@ typedef struct client_list {
 
 
 
+
 void newList(struct client_list *client_list);
 void insertList(struct client_list **client_list, struct client client);
 int isEmpty(struct client_list *client_list);
@@ -67,20 +89,24 @@ void insert_system_data_list(SystemDataList *s_list, SystemDataNode *s_node);
 
 char* parse_string(char* string) ;
 
-char** parse_notificacoes(char *token);
+
+
+NotificationList *create_notification_list();
+
+void insert_notification_list(NotificationList *n_list, Notification *notification) ;
+
+NotificationList * parse_notificacoes(char *token);
+
+
 
 int* parse_fila_notificacoes(char *token);
 
-
 Client_seguidores *create_seguidores_list();
+
 void insert_seguidores_list(Client_seguidores *s_list, char *seguidor) ;
+
 Client_seguidores * parse_seguidores(char *token);
 
+
+
 #endif
-
-
-
-
-
-
-

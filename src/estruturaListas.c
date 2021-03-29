@@ -91,7 +91,6 @@ void insert_system_data_list(SystemDataList *s_list, SystemDataNode *s_node)
 	insert_system_data_list(current -> next, s_node);
 }
 
-
 Client_seguidores *create_seguidores_list()
 {
 	Client_seguidores *s_list = (Client_seguidores*) malloc(sizeof(Client_seguidores));
@@ -118,6 +117,120 @@ void insert_seguidores_list(Client_seguidores *s_list, char *seguidor)
 
 }
 
+NotificationList* parse_notificacoes(char *token) 
+{
+
+	NotificationList * notificacoes = create_notification_list();
+
+	char * parsed_str = parse_string(token);
+
+	//printf("%s", parsed_str);
+	
+	char *n_token = strtok_r(parsed_str, ",", &parsed_str);
+
+	int n_index = 0;
+
+	int id;
+	int msg_size;
+	int ppl_yet_to_receive;
+	uint16_t timestamp;
+	char *msg = NULL;
+
+
+	//Notification *n_notification = (Notification*) malloc(sizeof(Notification));
+	
+	while (n_token) 
+	{	
+		
+		
+		
+		//printf("\nindex: %d token: %s\n", n_index, n_token);
+		// Indice do id da msg
+		if (n_index == 0)
+			id = atoi(++n_token);
+
+		if (n_index == 1) 
+			timestamp = atoi(n_token);
+
+		// Indice da mensagem em si
+		if (n_index == 2) 
+			msg = n_token;
+		
+		if (n_index == 3)
+			msg_size = atoi(n_token);
+		
+		if (n_index == 4)
+			ppl_yet_to_receive = atoi(n_token);
+
+
+		if ( n_index == 4 ) {
+
+			Notification *n_notification = (Notification*) malloc(sizeof(Notification));
+
+			n_notification -> notification_id = id;
+
+			n_notification -> timestamp = timestamp;
+
+			n_notification -> msg_size = msg_size;
+
+			n_notification -> ppl_yet_to_receive = ppl_yet_to_receive;
+
+			n_notification -> notification_txt = (char *) calloc(strlen(msg)+1,sizeof(char));
+
+			n_notification -> notification_txt = strcpy(n_notification -> notification_txt, msg);
+
+			insert_notification_list (notificacoes, n_notification);
+
+			//printf("\nNotification %d with timestamp %d size %d and %d users yet to deliver message : %s\n", n_notification -> notification_id, n_notification -> timestamp,
+			//																							n_notification ->msg_size, n_notification -> ppl_yet_to_receive,
+			//																							n_notification -> notification_txt);
+			
+			id = -1;
+			msg = NULL;
+		}
+		
+		
+		//printf("\n%s\n", n_token);
+
+		n_token = strtok_r(parsed_str, ",", &parsed_str);
+
+		n_index++;
+
+		if (n_index == 5) 
+			n_index = 0;
+
+	}
+	
+	return notificacoes;
+
+}
+
+NotificationList *create_notification_list() 
+{
+
+	NotificationList *n_list = (NotificationList*) malloc(sizeof(NotificationList));
+
+	n_list -> notification = NULL;
+
+	n_list -> next = NULL;
+
+	return n_list;
+}
+
+void insert_notification_list(NotificationList *n_list, Notification *notification)
+{
+	NotificationList * current = n_list;
+
+	if ( current ->  notification == NULL)
+	{
+		current -> notification = notification;
+		current -> next = create_notification_list();
+		return;
+	}
+
+	insert_notification_list(current -> next, notification);
+
+}
 
 char* parse_string(char* string) {
     char *aux = (char *) calloc(strlen(string)+1,sizeof(char));
@@ -133,7 +246,6 @@ char* parse_string(char* string) {
     return out_str;
 }
 
-
 Client_seguidores * parse_seguidores(char *token)
 {
 
@@ -143,13 +255,12 @@ Client_seguidores * parse_seguidores(char *token)
 
 	//printf("%s", parsed_str);
 	
-	char *n_token = strtok(parsed_str, ",");
+	char *n_token = strtok_r(parsed_str, ",", &parsed_str);
 
 	while (n_token) 
 	{
-		//printf("Seguidor: %s\n", n_token);
 		insert_seguidores_list (seguidores, n_token);
-		n_token = strtok(NULL, ",");
+		n_token = strtok_r(parsed_str, ",", &parsed_str);
 
 	}
 
@@ -162,18 +273,17 @@ int count_notification_number(char * string)
 
 	char *parsed_str = parse_string(string);
 
-	char *n_token = strtok(parsed_str, ",");
+	char *n_token = strtok_r(parsed_str, ",", &parsed_str);
 
 	while (n_token)
 	{
 		nro_notificacoes++; 
-		n_token = strtok(NULL, ",");
+		n_token = strtok_r(parsed_str, ",", &parsed_str);
 	}
 
 	return nro_notificacoes;
 
 }
-
 
 int * parse_fila_notificacoes(char *string)
 {	
@@ -184,12 +294,15 @@ int * parse_fila_notificacoes(char *string)
 
 	char *parsed_str = parse_string(string);
 
-	char *n_token = strtok(parsed_str, ",");
+	//if (parsed_str == '\0') { return NULL; }
+
+	char *n_token = strtok_r(parsed_str, ",", &parsed_str);
 	
 	while (n_token)
 	{
+		//printf("Notification %d\n", atoi(n_token));
 		arr[index] = atoi(n_token);
-		n_token = strtok(NULL, ",");
+		n_token = strtok_r(parsed_str, ",", &parsed_str);
 		index++;
 	}
 
@@ -227,7 +340,7 @@ SystemDataList* carregaSystemData(){
 		if (row == 1)
 			continue; 
 		
-		printf("Line: %s\n", line_buffer);
+		//printf("Line: %s\n", line_buffer);
 
 		char *token = strtok(line_buffer, ";");
 
@@ -247,11 +360,13 @@ SystemDataList* carregaSystemData(){
 				break;
 			case COL_NOTIFICACOES:
 				if (strcmp(token, "\"\"") != 0) {
-					//node -> mensagens = parse_string(token);
+					node -> mensagens = parse_notificacoes(token);
 				}
 				break;
 			case COL_FILA_NOTIFICACOES:
-				if (strcmp(token, "\"\"") != 0) {
+				//printf("notification (%s) length:  %lu\n",token, strlen(token));
+
+				if (strcmp(token, "\"\"\n") != 0) {
 					node -> fila_notificacoes = parse_fila_notificacoes(token);
 				}
 				break;
@@ -261,7 +376,7 @@ SystemDataList* carregaSystemData(){
 				break;
 			}
 
-			printf("column: %d token:%s\n", col, token);
+			//printf("column: %d token:%s\n", col, token);
 			token = strtok(NULL, ";");
 			col++;
 		}

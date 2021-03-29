@@ -65,8 +65,6 @@ int main()
     printf("ERROR on bindining\n");
     return -1;
   }
-  // espera pela tentativa de conexão de algum cliente
-  //PACOTE msg;
 
   listen(serverSockfd, 10);
 
