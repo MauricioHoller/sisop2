@@ -24,18 +24,19 @@ Client_list *client_list; // lista de clientes
 
 pthread_mutex_t lock_insert;
 
-SystemDataList* system_data;
+SystemDataList *system_data;
 
 pthread_mutex_t system_data_mutex;
 
-struct mensagensAEnviar *notificacao;
+pthread_mutex_t lock_file_write;
 
+struct mensagensAEnviar *notificacao;
 
 int main()
 {
 
   system_data = carregaSystemData();
-  
+
   int serverSockfd, newsockfd, thread;
 
   socklen_t cliLen;
@@ -43,9 +44,14 @@ int main()
 
   pthread_t clientThread; //, syncThread; se precisar
 
-  int ret = pthread_mutex_init(&lock_insert, NULL);
-  if (ret != 0)
-    printf("Couldnt initialize mutex");
+  if (pthread_mutex_init(&lock_insert, NULL) != 0)
+    printf("Couldnt initialize lock insert mutex");
+
+  if (pthread_mutex_init(&system_data_mutex, NULL) != 0)
+    printf("Couldnt initialize system data mutex");
+  
+  if (pthread_mutex_init(&lock_file_write, NULL) != 0)
+    printf("Couldnt initialize lock file write mutex");
 
   // inicializa lista de clientes
   newList(client_list);
@@ -94,6 +100,58 @@ int main()
     }
   }
   pthread_mutex_destroy(&lock_insert);
+  pthread_mutex_destroy(&system_data_mutex);
+  pthread_mutex_destroy(&lock_file_write);
+}
+
+void escreveTabelaNotificacoes(Client_list * client)
+{
+  pthread_mutex_lock(&lock_insert);
+  pthread_mutex_lock(&lock_file_write);
+  
+  FILE *csvfile;
+  //char writebuffer[] 
+
+  csvfile = fopen(SYSTEM_DATA_FILE, "w");
+
+  if (csvfile == NULL)
+  {
+    printf("Couldnt append to file");
+    return;
+  }
+
+  fprintf(csvfile, "Username;Seguidores;Notificacoes;Fila_Notificacoes\n");
+
+  Client_list * current_clist = client;
+
+  while ( current_clist != NULL ){
+
+    fprintf(csvfile, "\"%s\";", current_clist -> client.username);
+
+    Client_seguidores * current_seguidores = current_clist -> seguidores;
+
+    fprintf(csvfile, "\"");
+    
+    
+    while ( current_seguidores  != NULL) {
+
+      //printf("writing seguidor \n");
+      fprintf(csvfile, ",%s", current_seguidores -> seguidor);
+
+      current_seguidores = current_seguidores -> next;
+
+    } 
+
+    fprintf(csvfile, "\";\"\";\"\";\"\"\n");
+
+    current_clist = current_clist -> next;
+
+  }
+
+  fclose(csvfile);
+  
+  pthread_mutex_unlock(&lock_file_write);
+  pthread_mutex_unlock(&lock_insert);
 }
 
 void *client_thread(void *socket)
@@ -180,6 +238,7 @@ int initializeClient(int client_socket, char *userid, struct client *client)
 
     client_list->seguidores = NULL; //Primeira vez que o cliente entra no servidor é colocado seguidores como 0
     client_list->me_seguem = NULL;
+
   }
   // encontrou CLIENT na lista, atualiza device
   else
@@ -198,6 +257,8 @@ int initializeClient(int client_socket, char *userid, struct client *client)
     else
       return -1;
   }
+
+  escreveTabelaNotificacoes(client_list);
   return 1;
 }
 
@@ -206,7 +267,7 @@ void listen_client(int client_socket, char *userid)
 
   PACOTE *mensagem;
   int byteCount;
-	enviaMSGNotificacao();
+  enviaMSGNotificacao();
   do
   {
 
@@ -232,8 +293,11 @@ void listen_client(int client_socket, char *userid)
       //tratador_meSeguem(mensagem);
       break;
 
-      case ERRO:printf("entrou no ERRO \n " ); tratamentoQuit(client_socket, mensagem);break;
- 
+    case ERRO:
+      printf("Something Unexpected happened...\n");
+      tratamentoQuit(client_socket, mensagem);
+      break;
+
       //default: printf("ERROR invalid command\n");
     }
 
@@ -265,33 +329,30 @@ int tratamentoFollow(PACOTE *mensagem)
   if (findNode(mensagem->txt, client_list, &aux) == 0)
   {
 
-      printf("Usuario inexistente para seguir \n");
+    printf("Usuario inexistente para seguir \n");
 
-      return -1; // Não existe Usuario com esse nome para seguir
+    return -1; // Não existe Usuario com esse nome para seguir
   }
 
   if (usuario_mandou_msg->seguidores == NULL)
   { // se ainda não seguiu ninguem
 
-
     pthread_mutex_lock(&lock_insert);
-       
-    usuario_mandou_msg -> seguidores = malloc(sizeof(struct seguidores));
 
-    strncpy(usuario_mandou_msg -> seguidores->seguidor, mensagem->txt, strlen(mensagem->txt) + 1);
+    usuario_mandou_msg->seguidores = malloc(sizeof(struct seguidores));
 
-    usuario_mandou_msg-> seguidores -> next = NULL;
+    strncpy(usuario_mandou_msg->seguidores->seguidor, mensagem->txt, strlen(mensagem->txt) + 1);
+
+    usuario_mandou_msg->seguidores->next = NULL;
 
     printf("Seguindo o primeiro: %s \n", mensagem->txt);
-    
-    pthread_mutex_unlock(&lock_insert);
 
+    pthread_mutex_unlock(&lock_insert);
   }
   else
   {
 
-    aux2 = usuario_mandou_msg -> seguidores;
-    
+    aux2 = usuario_mandou_msg->seguidores;
 
     while (aux2 != NULL)
     {
@@ -306,23 +367,21 @@ int tratamentoFollow(PACOTE *mensagem)
 
       previous = aux2;
       aux2 = aux2->next;
-
-
     }
 
     pthread_mutex_lock(&lock_insert);
 
     aux2 = malloc(sizeof(struct seguidores));
 
-    strncpy(aux2 -> seguidor, mensagem->txt, strlen(mensagem->txt) + 1);
+    strncpy(aux2->seguidor, mensagem->txt, strlen(mensagem->txt) + 1);
 
-    aux2 -> next = NULL;
+    aux2->next = NULL;
 
-    previous -> next = aux2;
-    
+    previous->next = aux2;
+
     pthread_mutex_unlock(&lock_insert);
-    
-    printf("Seguindo mais um: %s \n", mensagem -> txt);
+
+    printf("Seguindo mais um: %s \n", mensagem->txt);
 
     return 0;
   }
@@ -347,139 +406,148 @@ int tratadorSend(PACOTE *mensagem)
                                                                            //acha quem mandou a mensagem
 
   aux2 = usuario_mandou_msg->seguidores;
-	aux = client_list;
+  aux = client_list;
 
-	while (aux != NULL){
+  while (aux != NULL)
+  {
 
-		aux2= aux->seguidores;
-		if (strcmp(aux->client.username , mensagem->username)!=0){
-	 		while (aux2 != NULL){ //verifica todos os seguidores de todos os clientes
-		 		
-	 			if (strcmp(aux2->seguidor, mensagem->username)==0)
-	 			if (findNode( aux->client.username, client_list , &enviar_msg)==1){				      			
-						if (enviar_msg->client.devices[0] != FREEDEV)
-						sendMessage(enviar_msg->client.devices[0], mensagem);
-						else if (enviar_msg->client.devices[1] != FREEDEV)
-						sendMessage(enviar_msg->client.devices[1], mensagem);
-			 			else {trataNotificacao(aux->client.username,mensagem->username, mensagem->txt); }
-		 		}
-		 	aux2=aux2->next;
-	 		}
-	 	}
-	aux = aux->next;
-}
+    aux2 = aux->seguidores;
+    if (strcmp(aux->client.username, mensagem->username) != 0)
+    {
+      while (aux2 != NULL)
+      { //verifica todos os seguidores de todos os clientes
+
+        if (strcmp(aux2->seguidor, mensagem->username) == 0)
+          if (findNode(aux->client.username, client_list, &enviar_msg) == 1)
+          {
+            if (enviar_msg->client.devices[0] != FREEDEV)
+              sendMessage(enviar_msg->client.devices[0], mensagem);
+            else if (enviar_msg->client.devices[1] != FREEDEV)
+              sendMessage(enviar_msg->client.devices[1], mensagem);
+            else
+            {
+              trataNotificacao(aux->client.username, mensagem->username, mensagem->txt);
+            }
+          }
+        aux2 = aux2->next;
+      }
+    }
+    aux = aux->next;
+  }
 
   return 0;
 }
 
-void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt){
+void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt)
+{
 
-	struct mensagensAEnviar *aux;
-	struct mensagensAEnviar *aux2;
-	
-	aux = notificacao;
-	
-	if (notificacao != NULL){	
-	
-	while (aux!=NULL){
-     
+  struct mensagensAEnviar *aux;
+  struct mensagensAEnviar *aux2;
+
+  aux = notificacao;
+
+  if (notificacao != NULL)
+  {
+
+    while (aux != NULL)
+    {
+
       aux2 = aux;
-     
+
       aux = aux2->prox;
-	}
+    }
     pthread_mutex_lock(&lock_insert);
 
-	aux = malloc(sizeof(struct mensagensAEnviar));
-	
-	strcpy(aux->usuario,usuario_a_receber);
-	strcpy(aux->usuario_envio,usuario_enviou);
-	strcpy(aux->txt,txt);
-	
-	aux->prox=NULL;
+    aux = malloc(sizeof(struct mensagensAEnviar));
 
-   	aux2 -> prox = aux;
- 	printf("mensagem guardada de %s para %s \n",aux->usuario_envio,aux->usuario);   
+    strcpy(aux->usuario, usuario_a_receber);
+    strcpy(aux->usuario_envio, usuario_enviou);
+    strcpy(aux->txt, txt);
+
+    aux->prox = NULL;
+
+    aux2->prox = aux;
+    printf("mensagem guardada de %s para %s \n", aux->usuario_envio, aux->usuario);
     pthread_mutex_unlock(&lock_insert);
-    
-}
- else{
- 
+  }
+  else
+  {
+
     pthread_mutex_lock(&lock_insert);
 
- 	notificacao = malloc(sizeof(struct mensagensAEnviar));
-	
-	strcpy(notificacao->usuario , usuario_a_receber);	
-	strcpy(notificacao->usuario_envio,usuario_enviou);
-	strcpy(notificacao->txt,txt);
-	
-	
-	notificacao->prox=NULL;
- 	printf("mensagem guardada de %s para %s \n",notificacao->usuario_envio,notificacao->usuario);	
-  pthread_mutex_unlock(&lock_insert);
-    
- }
+    notificacao = malloc(sizeof(struct mensagensAEnviar));
 
+    strcpy(notificacao->usuario, usuario_a_receber);
+    strcpy(notificacao->usuario_envio, usuario_enviou);
+    strcpy(notificacao->txt, txt);
 
-
+    notificacao->prox = NULL;
+    printf("mensagem guardada de %s para %s \n", notificacao->usuario_envio, notificacao->usuario);
+    pthread_mutex_unlock(&lock_insert);
+  }
 }
 
-void enviaMSGNotificacao(void){
+void enviaMSGNotificacao(void)
+{
 
-	struct mensagensAEnviar *aux;
-	int cont=0;	
-	struct mensagensAEnviar *previous;
-	PACOTE *msg;
-	struct client_list *enviar_msg;	
-	aux = notificacao;
-	int enviou=-1;
-	previous = NULL;
-	
-	if (notificacao!=NULL){
-        pthread_mutex_lock(&lock_insert);
-    	
-    		//printf("ENTROU NO LOOP");
-	while (aux!=NULL){
-  	
-	if (findNode( aux->usuario, client_list , &enviar_msg)==1){				      			
-      			msg=malloc(sizeof(PACOTE));
-      			strcpy(msg->username,aux->usuario_envio);
-			strcpy(msg->txt,aux->txt);
+  struct mensagensAEnviar *aux;
+  int cont = 0;
+  struct mensagensAEnviar *previous;
+  PACOTE *msg;
+  struct client_list *enviar_msg;
+  aux = notificacao;
+  int enviou = -1;
+  previous = NULL;
 
-			if (cont>0){
-			if (enviar_msg->client.devices[0] != FREEDEV){
-			
-	      		previous = aux->prox;
+  if (notificacao != NULL)
+  {
+    pthread_mutex_lock(&lock_insert);
 
-			free(aux);      	
+    printf("ENTROU NO LOOP");
+    while (aux != NULL)
+    {
 
-	      		aux=previous;
+      if (findNode(aux->usuario, client_list, &enviar_msg) == 1)
+      {
+        msg = malloc(sizeof(PACOTE));
+        strcpy(msg->username, aux->usuario_envio);
+        strcpy(msg->txt, aux->txt);
 
-			sendMessage(enviar_msg->client.devices[0], msg);
-			}
-			else if (enviar_msg->client.devices[1] != FREEDEV){
-				sendMessage(enviar_msg->client.devices[1], msg);
+        if (enviar_msg->client.devices[0] != FREEDEV)
+        {
 
-		      		previous = aux->prox;
+          previous = aux->prox;
 
-				free(aux);      	
+          free(aux);
 
-		      		aux=previous;
-				}
-      		      	else{
-		      	previous=aux;
-			aux=aux->prox;
-			}
-			}
-			cont++;
-			free(msg);
-	}
-	    pthread_mutex_unlock(&lock_insert);
+          aux = previous;
+
+          sendMessage(enviar_msg->client.devices[0], msg);
+        }
+        else if (enviar_msg->client.devices[1] != FREEDEV)
+        {
+          sendMessage(enviar_msg->client.devices[1], msg);
+
+          previous = aux->prox;
+
+          free(aux);
+
+          aux = previous;
+        }
+        else
+        {
+          previous = aux;
+          aux = aux->prox;
+        }
+        free(msg);
+      }
+      pthread_mutex_unlock(&lock_insert);
+    }
+  }
 }
-}
-}
 
-
-void tratamentoQuit(int client_socket, PACOTE *mensagem){
+void tratamentoQuit(int client_socket, PACOTE *mensagem)
+{
 
   struct client_list *usuario_mandou_msg;
   struct client_list *enviar_msg;
@@ -488,32 +556,31 @@ void tratamentoQuit(int client_socket, PACOTE *mensagem){
   struct seguidores *aux2;
   PACOTE msg;
   if (findNode(mensagem->username, client_list, &usuario_mandou_msg) == 0) //client list é variavel global
-  		  exit (0);                                                             //erro
-  
-  msg.type= ERRO;
+    exit(0);                                                               //erro
+
+  msg.type = ERRO;
   strcpy(msg.username, "server");
-  strcpy(msg.txt,"");
+  strcpy(msg.txt, "");
   msg.timestamp = time(NULL);
- pthread_mutex_lock(&lock_insert);
-   	
-  if (usuario_mandou_msg->client.devices[0] == client_socket){
-  	
-  	//sendMessage(enviar_msg->client.devices[0], &msg);
-  	usuario_mandou_msg->client.devices[0] =FREEDEV;
-  	
+  pthread_mutex_lock(&lock_insert);
+
+  if (usuario_mandou_msg->client.devices[0] == client_socket)
+  {
+
+    //sendMessage(enviar_msg->client.devices[0], &msg);
+    usuario_mandou_msg->client.devices[0] = FREEDEV;
   }
-  
-  if (usuario_mandou_msg->client.devices[1] == client_socket){
-  	
-  	//sendMessage(enviar_msg->client.devices[1], &msg);
-  	usuario_mandou_msg->client.devices[1] = FREEDEV;
+
+  if (usuario_mandou_msg->client.devices[1] == client_socket)
+  {
+
+    //sendMessage(enviar_msg->client.devices[1], &msg);
+    usuario_mandou_msg->client.devices[1] = FREEDEV;
   }
   /*
   printf("%d \n ", usuario_mandou_msg->client.devices[0]);
   printf("%d \n ",usuario_mandou_msg->client.devices[1] );
 /*  close(client_socket);
  */
- pthread_mutex_unlock(&lock_insert);
-   
-
+  pthread_mutex_unlock(&lock_insert);
 }

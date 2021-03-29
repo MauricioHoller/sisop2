@@ -31,7 +31,7 @@ void tratamentoQuit(int client_socket, PACOTE *mensagem);
 void trataNotificacao(char *usuario_a_receber, char *usuario_enviou, char *txt);
 void enviaMSGNotificacao(void);
 
-
+//void escreveTabelaNotificacoes(Client_list * cliente);
 void carregaTabelaNotificacoes();
 
 #endif

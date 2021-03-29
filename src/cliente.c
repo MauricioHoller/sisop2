@@ -117,7 +117,7 @@ void *clientRcv(void * args)
             break;
         }
 
-        if (strlen(msg->txt) > 0 ){
+        if (strlen(msg->txt) > 0 && strlen(msg->username) > MINNAME ){
          printf("%s says: %s\n", msg->username, msg -> txt); 
          printf("#: ");
         }
