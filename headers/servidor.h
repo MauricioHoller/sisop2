@@ -26,6 +26,11 @@ int tratamentoFollow(PACOTE *mensagem);
 int tratadorSend(PACOTE *mensagem);
 int tratador_meSeguem(PACOTE *mensagem);
 
+void tratamentoQuit(int client_socket, PACOTE *mensagem);
+void trataNotificacao(PACOTE *mensagem, char *usuario_a_receber);
+void enviaMSGNotificacao(void);
+
+
 void carregaTabelaNotificacoes();
 
 #endif

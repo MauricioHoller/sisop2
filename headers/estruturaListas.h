@@ -40,6 +40,13 @@ typedef struct notification_list {
 
 } NotificationList;
 
+typedef struct mensagensAEnviar{
+	struct mensagensAEnviar *prox;
+	PACOTE *msg;
+	char usuario[MAXNAME];
+} MensagensAenviar;
+
+
 typedef struct system_data_node {
 
     char* username;
