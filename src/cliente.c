@@ -16,7 +16,8 @@ char* username;
 void check_args(char* argv[])
 {
 	if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL ) {
-		printf("Not enough args!\n");
+        printf("Not enough arguments.\n");
+        printf("Usage: %s user hostname port\n", argv[0]);
 		exit(1);
 	}
 } 

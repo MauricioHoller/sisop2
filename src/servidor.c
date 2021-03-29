@@ -297,7 +297,9 @@ void listen_client(int client_socket, char *userid)
       printf("Something Unexpected happened...\n");
      // tratamentoQuit(client_socket, mensagem);
       break;
-     case SAIR:printf("UM device de %s saiu\n", mensagem->username);
+
+    case SAIR:
+      printf("UM device de %s saiu\n", mensagem->username);
       tratamentoQuit(client_socket, mensagem);
       break;
      

@@ -18,8 +18,6 @@
 #include <sys/inotify.h>
 #include <pwd.h>
 
-
-
 #define MAXNAME 20
 #define MINNAME 3
 
@@ -31,7 +29,6 @@
 #define LOGIN 3
 #define ERRO 4
 #define SAIR 7
-
 
  typedef struct packet {
       uint16_t type; // tipo de pacote
