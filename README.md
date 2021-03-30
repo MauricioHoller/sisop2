@@ -36,6 +36,10 @@ make clean
 ./client @pedro 127.0.0.1 2000
 ````
 
+### Link para a playlist com o vídeo da apresentação do trabalho
+
+* [Playlist apresentação do trabalho](https://www.youtube.com/playlist?list=PLDlyqduot7mGtX3Wia59WzKW4-b5dM97h)
+
 ## Autores
 
 * Leandro de Oliveira Pereira - 00273114
