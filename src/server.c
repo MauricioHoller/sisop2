@@ -19,19 +19,18 @@
 #include "mensagem.h"
 #include "estruturaListas.h"
 
+
 #define PORT 2000
 
+// 0: IP; 1: PORT
+char master_addr[2][16] = {"127.0.0.1", PORT};
+
+// Last Oper Id
+int update_id;
+
+
+
 bool is_primary;
-
-int priority;
-
-char master[3][16] = {"127.0.0.1", "2000", "2001"};
-
-// 0: IP, 1: LISTEN_CLIENT_PORT 2: LISTEN_REPLICA_PORT
-char replicas[NO_REPLICAS][3][16] = { {"127.0.0.1", "2000", "2001"}, {"127.0.0.1","3000", "3001"}, {"127.0.0.1","4000", "4001"} };
-
-int listen_replica_port;
-int listen_client_port;
 
 Client_list *client_list; // lista de clientes
 
@@ -45,45 +44,17 @@ pthread_mutex_t lock_file_write;
 
 struct mensagensAEnviar *notificacao;
 
-
-void check_args(char* argv[])
+int main()
 {
-	if (argv[1] == NULL || argv[2] == NULL  || argv[2] == NULL ) {
-		printf("Not enough args!\n");
-		exit(1);
-	}
-} 
 
+  system_data = carregaSystemData();
 
-int main(int argc, char *argv[])
-{
-  check_args(argv);
-
-  listen_client_port  = atoi(argv[1]);
-  listen_replica_port = atoi(argv[2]);
-
-  pthread_t replica_thread; 
-
-  if (pthread_create(&replica_thread, NULL, replica_listen_thread, argv[2]))
-  {
-    printf("ERROR creating replica listen thread\n");
-    exit(-1);
-  }
-
-
-  client_main_loop(atoi(argv[1]));
-
-
-}
-
-void client_main_loop(int port){
-  
   int serverSockfd, newsockfd, thread;
 
   socklen_t cliLen;
   struct sockaddr_in serv_addr, cli_addr;
 
-  pthread_t clientThread;
+  pthread_t clientThread; //, syncThread; se precisar
 
   if (pthread_mutex_init(&lock_insert, NULL) != 0)
     printf("Couldnt initialize lock insert mutex");
@@ -101,27 +72,25 @@ void client_main_loop(int port){
   if ((serverSockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
     printf("ERROR opening socket\n");
-    exit(-1);
+    return -1;
   }
   // inicializa estrutura do serv_addr
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
+  serv_addr.sin_port = htons(PORT);
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   bzero(&(serv_addr.sin_zero), 8);
 
   // associa o descritor do socket a estrutura
   if (bind(serverSockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
   {
-    printf("ERROR on binding\n");
-    exit(-1);
+    printf("ERROR on bindining\n");
+    return -1;
   }
 
   listen(serverSockfd, 10);
 
   cliLen = sizeof(struct sockaddr_in);
 
-
-  printf("Listening port %d for client connections....\n", port);
   while (1)
   {
 
@@ -129,135 +98,22 @@ void client_main_loop(int port){
     if ((newsockfd = accept(serverSockfd, (struct sockaddr *)&cli_addr, &cliLen)) == -1)
     {
       printf("ERROR on accept\n");
-      exit(-1);
+      return -1;
     }
 
-
-    // cria thread para atender o cliente
-    if (pthread_create(&clientThread, NULL, client_thread, &newsockfd))
+    if (thread)
     {
-      printf("ERROR creating thread\n");
-      exit(-1);
+      // cria thread para atender o cliente
+      if (pthread_create(&clientThread, NULL, client_thread, &newsockfd))
+      {
+        printf("ERROR creating thread\n");
+        return -1;
+      }
     }
-
-
-    
-  } 
-
-
+  }
   pthread_mutex_destroy(&lock_insert);
   pthread_mutex_destroy(&system_data_mutex);
-  pthread_mutex_destroy(&lock_file_write); 
-
-
-}
-
-void* replica_listen_thread(void * listen_port){
-
-  int port = atoi((char *) listen_port);
-
-  int serverSockfd, newsockfd, thread;
-
-  socklen_t cliLen;
-  struct sockaddr_in serv_addr, cli_addr;
-
-  // abre o socket
-  if ((serverSockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-  {
-    printf("ERROR replica listen opening socket\n");
-    exit(-1);
-  }
-  // inicializa estrutura do serv_addr
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(port);
-  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  bzero(&(serv_addr.sin_zero), 8);
-
-  // associa o descritor do socket a estrutura
-  if (bind(serverSockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-  {
-    printf("ERROR on binding\n");
-    exit(-1);
-  }
-
-  listen(serverSockfd, 10);
-
-  cliLen = sizeof(struct sockaddr_in);
-
-
-  printf("Listening port %d for replica connections....\n", port);
-  while (1)
-  {
-
-    // socket para atender requisição do cliente
-    if ((newsockfd = accept(serverSockfd, (struct sockaddr *)&cli_addr, &cliLen)) == -1)
-    {
-      printf("ERROR on accept\n");
-      exit(-1);
-
-    }
-
-
-    /**
-     * TODO: obter os dados de listen para atualizar a replica agora
-     **/
-
-  } 
-
-
-}
-
-void update_replica(char* ip, char* port)
-{
-
-  int sock = 0, valread; 
-  struct sockaddr_in serv_addr; 
-
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-  { 
-      printf("\n Socket creation error para replica %s:%s \n", ip, port); 
-      return;
-  } 
-  serv_addr.sin_family = AF_INET; 
-  serv_addr.sin_port = htons( atoi(port) );
-
-  if(inet_pton(AF_INET, ip, &serv_addr.sin_addr)<=0)   
-  { 
-      printf("\nInvalid address %s\n", ip); 
-      return;
-  } 
-  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
-  { 
-      printf("\nErro ao se conectar a replica %s:%s \n", ip, port); 
-      return;
-  } 
-
-  // TODO: send this via tcp socket 
-  if (notificacao != NULL) {
-
-
-  }
-
-}
-
-void update_replicas()
-{
-
-  /**
-   * TODO: Enviar os dados para as replicas 
-   **/
-
-  for (int i = 0; i < NO_REPLICAS; i++) 
-  {
-
-    if ( strcmp(replicas[i][2], master[2]) == 0 ) {
-        continue;
-    }
-
-    update_replica(replicas[i][0], replicas[i][2]);
-
-
-  }
+  pthread_mutex_destroy(&lock_file_write);
 }
 
 void escreveTabelaNotificacoes(Client_list * client)

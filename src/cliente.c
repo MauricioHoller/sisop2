@@ -21,7 +21,6 @@ void check_args(char* argv[])
 	}
 } 
 
-
 int verificaTipo(char *msg){
 	char aux[10]; 
      	
@@ -133,7 +132,6 @@ void *clientRcv(void * args)
     
 }
 
-
 int main(int argc, char *argv[]) 
 { 
 
@@ -166,8 +164,6 @@ int main(int argc, char *argv[])
     } 
 
     login(sock); // login feito com sucesso ao servidor 
-    // agora criamos uma thread para receber e enviar msg
-    // as threads que recebem mensagem devem ser mostradas na tela a meg recebida as de enviar apaenas enviam e testam se o servidor ainda esta aberto  
 
     pthread_create(&receiver, NULL, clientRcv, &sock);
 
@@ -176,7 +172,7 @@ int main(int argc, char *argv[])
     //pthread_create(&sender, NULL, clientSnd, &sock);
 
     //pthread_create()
-
+ 
 
     close(sock);
 
