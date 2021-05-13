@@ -28,7 +28,7 @@ int priority;
 char master[3][16] = {"127.0.0.1", "2000", "2001"};
 
 // 0: IP, 1: LISTEN_CLIENT_PORT 2: LISTEN_REPLICA_PORT
-char replicas[NO_REPLICAS][3][16] = { {"127.0.0.1", "2000", "2001"}, {"127.0.0.1","3000", "3001"}, {"127.0.0.1","4000", "4001"} };
+char replicas[NO_REPLICAS][3][16] = {{"127.0.0.1", "2000", "2001"}, {"127.0.0.1", "3000", "3001"}, {"127.0.0.1", "4000", "4001"}};
 
 int listen_replica_port;
 int listen_client_port;
@@ -45,24 +45,23 @@ pthread_mutex_t lock_file_write;
 
 struct mensagensAEnviar *notificacao;
 
-
-void check_args(char* argv[])
+void check_args(char *argv[])
 {
-	if (argv[1] == NULL || argv[2] == NULL  || argv[2] == NULL ) {
-		printf("Not enough args!\n");
-		exit(1);
-	}
-} 
-
+  if (argv[1] == NULL || argv[2] == NULL || argv[2] == NULL)
+  {
+    printf("Not enough args!\n");
+    exit(1);
+  }
+}
 
 int main(int argc, char *argv[])
 {
   check_args(argv);
 
-  listen_client_port  = atoi(argv[1]);
+  listen_client_port = atoi(argv[1]);
   listen_replica_port = atoi(argv[2]);
 
-  pthread_t replica_thread; 
+  pthread_t replica_thread;
 
   if (pthread_create(&replica_thread, NULL, replica_listen_thread, argv[2]))
   {
@@ -70,14 +69,12 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-
   client_main_loop(atoi(argv[1]));
-
-
 }
 
-void client_main_loop(int port){
-  
+void client_main_loop(int port)
+{
+
   int serverSockfd, newsockfd, thread;
 
   socklen_t cliLen;
@@ -90,7 +87,7 @@ void client_main_loop(int port){
 
   if (pthread_mutex_init(&system_data_mutex, NULL) != 0)
     printf("Couldnt initialize system data mutex");
-  
+
   if (pthread_mutex_init(&lock_file_write, NULL) != 0)
     printf("Couldnt initialize lock file write mutex");
 
@@ -120,7 +117,6 @@ void client_main_loop(int port){
 
   cliLen = sizeof(struct sockaddr_in);
 
-
   printf("Listening port %d for client connections....\n", port);
   while (1)
   {
@@ -132,32 +128,28 @@ void client_main_loop(int port){
       exit(-1);
     }
 
-
     // cria thread para atender o cliente
     if (pthread_create(&clientThread, NULL, client_thread, &newsockfd))
     {
       printf("ERROR creating thread\n");
       exit(-1);
     }
-
-
-    
-  } 
-
+  }
 
   pthread_mutex_destroy(&lock_insert);
   pthread_mutex_destroy(&system_data_mutex);
-  pthread_mutex_destroy(&lock_file_write); 
-
-
+  pthread_mutex_destroy(&lock_file_write);
 }
 
-void* replica_listen_thread(void * listen_port){
 
-  int port = atoi((char *) listen_port);
+void *replica_listen_thread(void *listen_port)
+{
+
+  int port = atoi((char *)listen_port);
 
   int serverSockfd, newsockfd, thread;
 
+  PACOTE msg;
   socklen_t cliLen;
   struct sockaddr_in serv_addr, cli_addr;
 
@@ -184,89 +176,131 @@ void* replica_listen_thread(void * listen_port){
 
   cliLen = sizeof(struct sockaddr_in);
 
-
   printf("Listening port %d for replica connections....\n", port);
   while (1)
   {
 
-    // socket para atender requisição do cliente
-    if ((newsockfd = accept(serverSockfd, (struct sockaddr *)&cli_addr, &cliLen)) == -1)
+    newsockfd = accept(serverSockfd, (struct sockaddr *)&cli_addr, &cliLen);
+    if (newsockfd == -1)
     {
       printf("ERROR on accept\n");
       exit(-1);
-
     }
 
+    int byteCount = readMessage(newsockfd, &msg);
 
-    /**
-     * TODO: obter os dados de listen para atualizar a replica agora
-     **/
+    if (byteCount < 0)
+    {
+      printf("Error listening socket");
+      break;
+    }
 
-  } 
+    if (strlen(msg.txt) > 0 && strlen(msg.user_sent) > 0)
+    {
+      printf("Synchronized: (\"%s\") from user %s to user %s\n", msg.txt, msg.user_sent, msg.username);
 
+      trataNotificacao( msg.username, msg.user_sent, msg.txt);
 
+    }
+  }
 }
 
-void update_replica(char* ip, char* port)
+int connect_replica(char *ip, char *port)
 {
+  int sock = 0, valread;
+  struct sockaddr_in serv_addr;
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  {
+    printf("Socket creation error para replica %s:%s \n", ip, port);
+    return -1;
+  }
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(atoi(port));
 
-  int sock = 0, valread; 
-  struct sockaddr_in serv_addr; 
-
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-  { 
-      printf("\n Socket creation error para replica %s:%s \n", ip, port); 
-      return;
-  } 
-  serv_addr.sin_family = AF_INET; 
-  serv_addr.sin_port = htons( atoi(port) );
-
-  if(inet_pton(AF_INET, ip, &serv_addr.sin_addr)<=0)   
-  { 
-      printf("\nInvalid address %s\n", ip); 
-      return;
-  } 
-  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
-  { 
-      printf("\nErro ao se conectar a replica %s:%s \n", ip, port); 
-      return;
-  } 
-
-  // TODO: send this via tcp socket 
-  if (notificacao != NULL) {
-
-
+  if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0)
+  {
+    printf("Invalid address %s\n", ip);
+    return -1;
+  }
+  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+  {
+    printf("Erro ao se conectar a replica %s:%s \n", ip, port);
+    return -1;
   }
 
+  return sock;
+}
+
+void update_replica(char *ip, char *port)
+{
+
+  struct mensagensAEnviar *aux;
+  struct mensagensAEnviar *aux2;
+
+  // TODO: send this via tcp socket
+  if (notificacao != NULL)
+  {
+
+    aux = notificacao;
+
+    if (notificacao != NULL)
+    {
+
+      while (aux != NULL)
+      {
+
+        int sock = connect_replica(ip, port);
+
+        if (sock == -1)
+        {
+          return;
+        }
+
+        PACOTE *msg = malloc(sizeof(PACOTE));
+
+        // The user who sent
+        strcpy(msg->user_sent, aux->usuario_envio);
+        // User that will receive the message
+        strcpy(msg->username, aux->usuario);
+        // Msg Text
+        strcpy(msg->txt, aux->txt);
+
+        printf("Stored message (\"%s\") from user %s to user %s\n", msg->txt, msg->user_sent, msg->username);
+
+        sendMessage(sock, msg);
+
+        aux = aux->prox;
+      }
+    }
+  }
 }
 
 void update_replicas()
 {
 
-  /**
-   * TODO: Enviar os dados para as replicas 
-   **/
 
-  for (int i = 0; i < NO_REPLICAS; i++) 
+  pthread_mutex_lock(&lock_insert);
+  for (int i = 0; i < NO_REPLICAS; i++)
   {
 
-    if ( strcmp(replicas[i][2], master[2]) == 0 ) {
-        continue;
+    if (strcmp(replicas[i][2], master[2]) == 0)
+    {
+      continue;
     }
 
     update_replica(replicas[i][0], replicas[i][2]);
-
-
   }
+  pthread_mutex_unlock(&lock_insert);
+
 }
 
-void escreveTabelaNotificacoes(Client_list * client)
+void escreveTabelaNotificacoes(Client_list *client)
 {
   pthread_mutex_lock(&lock_insert);
   pthread_mutex_lock(&lock_file_write);
-  
+
   FILE *csvfile;
-  //char writebuffer[] 
+  //char writebuffer[]
 
   csvfile = fopen(SYSTEM_DATA_FILE, "w");
 
@@ -278,34 +312,33 @@ void escreveTabelaNotificacoes(Client_list * client)
 
   fprintf(csvfile, "Username;Seguidores;Notificacoes;Fila_Notificacoes\n");
 
-  Client_list * current_clist = client;
+  Client_list *current_clist = client;
 
-  while ( current_clist != NULL ){
+  while (current_clist != NULL)
+  {
 
-    fprintf(csvfile, "\"%s\";", current_clist -> client.username);
+    fprintf(csvfile, "\"%s\";", current_clist->client.username);
 
-    Client_seguidores * current_seguidores = current_clist -> seguidores;
+    Client_seguidores *current_seguidores = current_clist->seguidores;
 
     fprintf(csvfile, "\"");
-    
-    
-    while ( current_seguidores  != NULL) {
+
+    while (current_seguidores != NULL)
+    {
 
       //printf("writing seguidor \n");
-      fprintf(csvfile, ",%s", current_seguidores -> seguidor);
+      fprintf(csvfile, ",%s", current_seguidores->seguidor);
 
-      current_seguidores = current_seguidores -> next;
-
-    } 
+      current_seguidores = current_seguidores->next;
+    }
 
     fprintf(csvfile, "\";\"\";\"\";\"\"\n");
 
-    current_clist = current_clist -> next;
-
+    current_clist = current_clist->next;
   }
 
   fclose(csvfile);
-  
+
   pthread_mutex_unlock(&lock_file_write);
   pthread_mutex_unlock(&lock_insert);
 }
@@ -351,7 +384,7 @@ void *client_thread(void *socket)
     if (byteCount < 0)
       printf("ERROR sending connected message\n");
 
-    printf("%s connected!\n", userid);
+    printf("%s connected! via socket: %d\n", userid, *client_socket);
   }
   else
   {
@@ -394,7 +427,6 @@ int initializeClient(int client_socket, char *userid, struct client *client)
 
     client_list->seguidores = NULL; //Primeira vez que o cliente entra no servidor é colocado seguidores como 0
     client_list->me_seguem = NULL;
-
   }
   // encontrou CLIENT na lista, atualiza device
   else
@@ -432,32 +464,31 @@ void listen_client(int client_socket, char *userid)
     if (byteCount < 0)
       printf("ERROR listening to the client\n");
 
-    //	printf("%s says: %s\n", mensagem->username, mensagem -> txt);
-
     switch (mensagem->type)
     {
     case SEND:
-      if (mensagem->dados != NULL)
-        //printf("%s says: %s\n", mensagem->username, mensagem -> txt);
-        //              tratadorSend(mensagem);
+      if (mensagem->username != NULL)
+
         tratadorSend(mensagem);
 
       break;
     case FOLLOW:
-      tratamentoFollow(mensagem);
-          escreveTabelaNotificacoes(client_list);
 
-      //tratador_meSeguem(mensagem);
+      tratamentoFollow(mensagem);
+      escreveTabelaNotificacoes(client_list);
+
       break;
 
     case ERRO:
       printf("Something Unexpected happened...\n");
-     // tratamentoQuit(client_socket, mensagem);
+      //tratamentoQuit(client_socket, mensagem);
+
       break;
-     case SAIR:printf("UM device de %s saiu\n", mensagem->username);
+    case SAIR:
+      printf("UM device de %s saiu\n", mensagem->username);
       tratamentoQuit(client_socket, mensagem);
       break;
-     
+
       //default: printf("ERROR invalid command\n");
     }
 
@@ -508,6 +539,8 @@ int tratamentoFollow(PACOTE *mensagem)
   else
   {
 
+    pthread_mutex_lock(&lock_insert);
+
     aux2 = usuario_mandou_msg->seguidores;
 
     while (aux2 != NULL)
@@ -524,8 +557,6 @@ int tratamentoFollow(PACOTE *mensagem)
       previous = aux2;
       aux2 = aux2->next;
     }
-
-    pthread_mutex_lock(&lock_insert);
 
     aux2 = malloc(sizeof(struct seguidores));
 
@@ -583,6 +614,7 @@ int tratadorSend(PACOTE *mensagem)
             else
             {
               trataNotificacao(aux->client.username, mensagem->username, mensagem->txt);
+              update_replicas();
             }
           }
         aux2 = aux2->next;
@@ -654,9 +686,10 @@ void enviaMSGNotificacao(void)
   aux = notificacao;
   int enviou = -1;
   previous = NULL;
-
+  printf("Seeing if there are notifications to send\n");
   if (notificacao != NULL)
   {
+    printf("Seems that there are notifications :-)\n");
     pthread_mutex_lock(&lock_insert);
 
     while (aux != NULL)
@@ -677,6 +710,7 @@ void enviaMSGNotificacao(void)
 
           aux = previous;
 
+          printf("Sending msg %s via socket %d\n", msg->txt, enviar_msg->client.devices[0] );
           sendMessage(enviar_msg->client.devices[0], msg);
         }
         else if (enviar_msg->client.devices[1] != FREEDEV)
@@ -722,20 +756,14 @@ void tratamentoQuit(int client_socket, PACOTE *mensagem)
   if (usuario_mandou_msg->client.devices[0] == client_socket)
   {
 
-    //sendMessage(enviar_msg->client.devices[0], &msg);
     usuario_mandou_msg->client.devices[0] = FREEDEV;
   }
 
   if (usuario_mandou_msg->client.devices[1] == client_socket)
   {
 
-    //sendMessage(enviar_msg->client.devices[1], &msg);
     usuario_mandou_msg->client.devices[1] = FREEDEV;
   }
-  /*
-  printf("%d \n ", usuario_mandou_msg->client.devices[0]);
-  printf("%d \n ",usuario_mandou_msg->client.devices[1] );
-/*  close(client_socket);
- */
+
   pthread_mutex_unlock(&lock_insert);
 }

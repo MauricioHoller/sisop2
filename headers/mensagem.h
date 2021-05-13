@@ -31,31 +31,21 @@
 #define LOGIN 3
 #define ERRO 4
 #define SAIR 7
-
+#define REPLICA_UPDATE 8
 
  typedef struct packet {
       uint16_t type; // tipo de pacote
       uint16_t seqn; // numero de sequencia
       uint16_t length; // comprimento do payload
-      uint16_t timestamp; // timestamp do dado     
+      uint16_t timestamp; // timestamp do dado 
+
+      char user_sent[MAXNAME];    
       char username[MAXNAME];
       char txt[MSG_MAX_SIZE];
 
-      char* dados; //dados da mensagem colocar tamanho maximo
      } PACOTE;
 
 
-
-/* não foi utilizado
-
- typedef struct notification {
-      uint32_t id; // identificador
-      uint32_t timestamp; // timestamp da notificação
-      char* mensagem; //mensagem
-      uint16_t lenght; // tamanho da mensagem
-      uint16_t pendentes; // quantidade de leitores pendentes
-     } MENSAGEM;
-*/
 
 void clientMessage(PACOTE* msg, int type, char* username, char* text);
 void serverMessage(PACOTE* msg, int type, char* text);

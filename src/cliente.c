@@ -7,8 +7,6 @@
 #include "cliente.h"
 #include "mensagem.h"
 
-#define PORT 2000
-
 pthread_t sender, receiver; //produtor / consumidor
 char* username;
 
@@ -120,7 +118,7 @@ void *clientRcv(void * args)
             break;
         }
 
-        if (strlen(msg->txt) > 0 && strlen(msg->username) > MINNAME ){
+        if (strlen(msg->txt) > 0 && strlen(msg->username) > 0 ){
          printf("%s says: %s\n", msg->username, msg -> txt); 
          printf("#: ");
         }
@@ -166,7 +164,8 @@ int main(int argc, char *argv[])
     login(sock); // login feito com sucesso ao servidor 
 
     pthread_create(&receiver, NULL, clientRcv, &sock);
-
+    
+    printf("Connected using socket %d", sock);
     clientSnd(&sock);
     // producer
     //pthread_create(&sender, NULL, clientSnd, &sock);

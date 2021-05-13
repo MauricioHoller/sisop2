@@ -31,11 +31,6 @@ int sendMessage(int socket, PACOTE *msg) {
     msg->type = htons(msg->type);
     char *buff = (char*) msg;
 
-    //strncpy(msg->txt, "ola pedro", strlen("ola pedro") + 1);
-
-
-    //printf("vou mandaaaar");
-    //printf("\nLength of %s: %zu\n", msg->dados, strlen(msg->dados));
 
     do {
         r += write(socket, &buff[n], sizeof(PACOTE) - n);
@@ -51,18 +46,27 @@ int sendMessage(int socket, PACOTE *msg) {
 void serverMessage(PACOTE* msg, int type, char* text) {
     msg->type = type;
     strncpy(msg->username, "SERVER", strlen("SERVER"));
-    //strncpy(msg->dados, text, strlen(text));
-    //msg->dados = text;
-    msg->dados = calloc(strlen(text)+1, sizeof(char));
     strncpy(msg->txt, text, strlen(text) + 1);
-    //puts(msg->dados);
 }
+
+void updateReplicaMessage(PACOTE* msg, char* text, char* sent_user, char* to_user)
+{
+    msg->type = REPLICA_UPDATE;
+
+    strncpy(msg->user_sent, sent_user, strlen(sent_user) + 1);
+    strncpy(msg->username, sent_user, strlen(sent_user) + 1);
+
+    strncpy(msg -> txt, text, strlen(text) + 1);
+
+    msg->timestamp = time(NULL);
+
+}
+
 
 void clientMessage(PACOTE* msg, int type, char* username, char* text) {
     msg->type = type;
     strncpy(msg->username, username, strlen(username) + 1);
-    
-    msg->dados = calloc(strlen(text)+1, sizeof(char));
+
     strncpy(msg -> txt, text, strlen(text) + 1);
 
     msg->timestamp = time(NULL);
